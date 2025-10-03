@@ -61,7 +61,6 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string) 
 	req.Header.Set("anthropic-version", "2023-06-01")
 
 	client := &http.Client{}
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
