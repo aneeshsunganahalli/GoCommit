@@ -6,6 +6,7 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/dfanso/commit-msg/src/chatgpt"
+	"github.com/dfanso/commit-msg/src/claude"
 	"github.com/dfanso/commit-msg/src/gemini"
 	"github.com/dfanso/commit-msg/src/grok"
 	"github.com/dfanso/commit-msg/src/internal/display"
@@ -115,6 +116,8 @@ func main() {
 			commitMsg, err = gemini.GenerateCommitMessage(config, changes, apiKey)
 		} else if os.Getenv("COMMIT_LLM") == "chatgpt" {
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
+		}  else if os.Getenv("COMMIT_LLM") == "claude" {
+	commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
 		} else {
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 		}
