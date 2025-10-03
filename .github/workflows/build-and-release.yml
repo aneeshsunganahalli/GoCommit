@@ -43,6 +43,8 @@ jobs:
 
   build:
     name: Build Go Binary
+    permissions:
+      contents: read
     runs-on: ${{ matrix.os }}
     needs: auto-tag
     # Always run build, even if auto-tag was skipped (e.g., for tag pushes)
