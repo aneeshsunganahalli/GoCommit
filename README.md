@@ -28,7 +28,7 @@ Looking to contribute? Check out:
 ## Features
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
-🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, or ChatGPT  
+🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude or ChatGPT  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
