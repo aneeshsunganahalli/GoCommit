@@ -61,10 +61,12 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string) 
 	req.Header.Set("anthropic-version", "2023-06-01")
 
 	client := &http.Client{}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	var claudeResponse ClaudeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&claudeResponse); err != nil {
