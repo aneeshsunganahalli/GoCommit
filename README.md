@@ -20,6 +20,7 @@ Before running the application, ensure you have set the system environment varia
 This project is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels.
 
 Looking to contribute? Check out:
+
 - [Good First Issues](https://github.com/dfanso/commit-msg/labels/good%20first%20issue)
 - [Help Wanted Issues](https://github.com/dfanso/commit-msg/labels/help%20wanted)
 - [Contributing Guidelines](CONTRIBUTING.md)
@@ -32,7 +33,7 @@ Looking to contribute? Check out:
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
 🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
-⚡ **Fast** - Quick generation of commit messages  
+⚡ **Fast** - Quick generation of commit messages
 
 ## Supported LLM Providers
 
@@ -40,12 +41,12 @@ You can use either **Google Gemini** or **Grok** as the LLM to generate commit m
 
 ### Environment Variables
 
-| Variable | Values | Description |
-|----------|--------|-------------|
-| `COMMIT_LLM` | `gemini`, `grok`, or `chatgpt` | Choose your LLM provider |
-| `GEMINI_API_KEY` | Your API key | Required if using Gemini |
-| `GROK_API_KEY` | Your API key | Required if using Grok |
-| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
+| Variable         | Values                                   | Description               |
+| ---------------- | ---------------------------------------- | ------------------------- |
+| `COMMIT_LLM`     | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider  |
+| `GEMINI_API_KEY` | Your API key                             | Required if using Gemini  |
+| `GROK_API_KEY`   | Your API key                             | Required if using Grok    |
+| `OPENAI_API_KEY` | Your API key                             | Required if using ChatGPT |
 
 ---
 
@@ -58,11 +59,13 @@ You can use either **Google Gemini** or **Grok** as the LLM to generate commit m
 3. Add the directory to your system PATH:
 
    **Windows:**
+
    ```cmd
    setx PATH "%PATH%;C:\path\to\commit-msg"
    ```
 
    **Linux/macOS:**
+
    ```bash
    export PATH=$PATH:/path/to/commit-msg
    echo 'export PATH=$PATH:/path/to/commit-msg' >> ~/.bashrc  # or ~/.zshrc
@@ -71,12 +74,14 @@ You can use either **Google Gemini** or **Grok** as the LLM to generate commit m
 4. Set up environment variables:
 
    **Windows:**
+
    ```cmd
    setx COMMIT_LLM "gemini"
    setx GEMINI_API_KEY "your-api-key-here"
    ```
 
    **Linux/macOS:**
+
    ```bash
    export COMMIT_LLM=gemini
    export GEMINI_API_KEY=your-api-key-here
@@ -156,16 +161,19 @@ commit .
 ### Getting API Keys
 
 **Google Gemini:**
+
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new API key
 3. Set the `GEMINI_API_KEY` environment variable
 
 **Grok (X.AI):**
+
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
 
 **OpenAI (ChatGPT):**
+
 1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
 2. Create a new API key
 3. Set the `OPENAI_API_KEY` environment variable
@@ -219,7 +227,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 Made with ❤️ for Hacktoberfest 2025
-
-
-
-
