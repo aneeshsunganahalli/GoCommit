@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/dfanso/commit-msg/src/chatgpt"
 	"github.com/dfanso/commit-msg/src/gemini"
 	"github.com/dfanso/commit-msg/src/grok"
@@ -131,6 +132,14 @@ func main() {
 
 	// Display the commit message in a styled panel
 	displayCommitMessage(commitMsg)
+
+	// Copy to clipboard
+	err = clipboard.WriteAll(commitMsg)
+	if err != nil {
+		pterm.Warning.Printf("⚠️  Could not copy to clipboard: %v\n", err)
+	} else {
+		pterm.Success.Println("📋 Commit message copied to clipboard!")
+	}
 
 	pterm.Println()
 
