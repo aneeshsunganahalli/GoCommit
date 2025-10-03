@@ -4,13 +4,14 @@
 [![Go Version](https://img.shields.io/badge/Go-1.23.4-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/DFanso/commit-msg?utm_source=oss&utm_medium=github&utm_campaign=DFanso%2Fcommit-msg&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 `commit-msg` is a command-line tool that generates commit messages using LLM (Large Language Models). It is designed to help developers create clear and concise commit messages for their Git repositories automatically by analyzing your staged changes.
 
 ## Screenshot
 
 Below is a sample execution of `commit-msg`:
 
-![Commit-msg Screenshot](image.png)
+![Commit-msg GIF](commit.gif)
 
 Before running the application, ensure you have set the system environment variables. and add commit.exe to path variables (same for linux macOS)
 
@@ -163,6 +164,11 @@ commit .
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
+
+**OpenAI (ChatGPT):**
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create a new API key
+3. Set the `OPENAI_API_KEY` environment variable
 
 ---
 
