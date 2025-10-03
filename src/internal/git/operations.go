@@ -86,22 +86,24 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 		changes.WriteString("\n\n")
 
 		// Try to get content of untracked files (limited to text files and smaller size)
-		untrackedFiles := strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
-		for _, file := range untrackedFiles {
-			if file == "" {
-				continue
-			}
+        untrackedFiles := strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
+        for _, file := range untrackedFiles {
+            if file == "" {
+                continue
+            }
 
-			fullPath := filepath.Join(config.Path, file)
-			if utils.IsTextFile(fullPath) && utils.IsSmallFile(fullPath) {
-				fileContent, err := os.ReadFile(fullPath)
-				if err == nil {
-					changes.WriteString(fmt.Sprintf("Content of new file %s:\n", file))
-					changes.WriteString(string(fileContent))
-					changes.WriteString("\n\n")
-				}
-			}
-		}
+            fullPath := filepath.Join(config.Path, file)
+            if utils.IsTextFile(fullPath) && utils.IsSmallFile(fullPath) {
+                fileContent, err := os.ReadFile(fullPath)
+                if err != nil {
+                    // Log but don't fail - untracked file may have been deleted or is inaccessible
+                    continue
+                }
+                changes.WriteString(fmt.Sprintf("Content of new file %s:\n", file))
+                changes.WriteString(string(fileContent))
+                changes.WriteString("\n\n")
+            }
+        }
 	}
 
 	// 4. Get recent commits for context
