@@ -11,7 +11,7 @@
 
 Below is a sample execution of `commit-msg`:
 
-![Commit-msg Screenshot](image.png)
+![Commit-msg GIF](commit.gif)
 
 Before running the application, ensure you have set the system environment variables. and add commit.exe to path variables (same for linux macOS)
 
@@ -164,6 +164,11 @@ commit .
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
+
+**OpenAI (ChatGPT):**
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create a new API key
+3. Set the `OPENAI_API_KEY` environment variable
 
 ---
 
