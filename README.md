@@ -3,7 +3,7 @@
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-2025-orange.svg)](https://hacktoberfest.com/)
 [![Go Version](https://img.shields.io/badge/Go-1.23.4-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/DFanso/commit-msg?utm_source=oss&utm_medium=github&utm_campaign=DFanso%2Fcommit-msg&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 `commit-msg` is a command-line tool that generates commit messages using LLM (Large Language Models). It is designed to help developers create clear and concise commit messages for their Git repositories automatically by analyzing your staged changes.
 
 ## Screenshot
