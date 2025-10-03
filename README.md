@@ -173,6 +173,12 @@ commit .
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
 
+**Claude (Anthropic):**
+
+1.  Visit the [Anthropic Console](https://console.anthropic.com/)
+2.  Create a new API key
+3.  Set the `CLAUDE_API_KEY` environment variable
+
 **OpenAI (ChatGPT):**
 
 1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
