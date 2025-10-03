@@ -28,7 +28,7 @@ Looking to contribute? Check out:
 ## Features
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
-🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, or ChatGPT  
+🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude or ChatGPT  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
@@ -37,16 +37,17 @@ Looking to contribute? Check out:
 
 ## Supported LLM Providers
 
-You can use either **Google Gemini** or **Grok** as the LLM to generate commit messages:
+You can use **Google Gemini**, **Grok**, **Claude**, or **ChatGPT** as the LLM to generate commit messages:
 
 ### Environment Variables
 
-| Variable         | Values                                   | Description               |
-| ---------------- | ---------------------------------------- | ------------------------- |
-| `COMMIT_LLM`     | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider  |
-| `GEMINI_API_KEY` | Your API key                             | Required if using Gemini  |
-| `GROK_API_KEY`   | Your API key                             | Required if using Grok    |
-| `OPENAI_API_KEY` | Your API key                             | Required if using ChatGPT |
+| Variable | Values | Description |
+| :--- | :--- | :--- |
+| `COMMIT_LLM` | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider |
+| `GEMINI_API_KEY` | Your API key | Required if using Gemini |
+| `GROK_API_KEY` | Your API key | Required if using Grok |
+| `CLAUDE_API_KEY` | Your API key | Required if using Claude |
+| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
 
 ---
 
@@ -171,6 +172,12 @@ commit .
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
+
+**Claude (Anthropic):**
+
+1.  Visit the [Anthropic Console](https://console.anthropic.com/)
+2.  Create a new API key
+3.  Set the `CLAUDE_API_KEY` environment variable
 
 **OpenAI (ChatGPT):**
 
