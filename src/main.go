@@ -17,30 +17,34 @@ import (
 
 // main is the entry point of the commit message generator
 func main() {
-	// Get API key from environment variables
-	var apiKey string
-	if os.Getenv("COMMIT_LLM") == "google" {
-		apiKey = os.Getenv("GOOGLE_API_KEY")
-		if apiKey == "" {
-			log.Fatalf("GOOGLE_API_KEY is not set")
-		}
-	} else if os.Getenv("COMMIT_LLM") == "grok" {
-		apiKey = os.Getenv("GROK_API_KEY")
-		if apiKey == "" {
-			log.Fatalf("GROK_API_KEY is not set")
-		}
-	} else if os.Getenv("COMMIT_LLM") == "chatgpt" {
-		apiKey = os.Getenv("OPENAI_API_KEY")
-		if apiKey == "" {
-			log.Fatalf("OPENAI_API_KEY is not set")
-		}
-	} else if os.Getenv("COMMIT_LLM") == "claude" {
-		apiKey = os.Getenv("CLAUDE_API_KEY")
-		if apiKey == "" {
-			log.Fatalf("CLAUDE_API_KEY is not set")
-		} else {
-			log.Fatalf("Invalid COMMIT_LLM value: %s", os.Getenv("COMMIT_LLM"))
-		}
+    // Validate COMMIT_LLM and required API keys
+    commitLLM := os.Getenv("COMMIT_LLM")
+    var apiKey string
+
+    switch commitLLM {
+    case "google":
+        apiKey = os.Getenv("GOOGLE_API_KEY")
+        if apiKey == "" {
+            log.Fatalf("GOOGLE_API_KEY is not set")
+        }
+    case "grok":
+        apiKey = os.Getenv("GROK_API_KEY")
+        if apiKey == "" {
+            log.Fatalf("GROK_API_KEY is not set")
+        }
+    case "chatgpt":
+        apiKey = os.Getenv("OPENAI_API_KEY")
+        if apiKey == "" {
+            log.Fatalf("OPENAI_API_KEY is not set")
+        }
+    case "claude":
+        apiKey = os.Getenv("CLAUDE_API_KEY")
+        if apiKey == "" {
+            log.Fatalf("CLAUDE_API_KEY is not set")
+        }
+    default:
+        log.Fatalf("Invalid COMMIT_LLM value: %s", commitLLM)
+    }
 
 		// Get current directory
 		currentDir, err := os.Getwd()
@@ -139,5 +143,4 @@ func main() {
 
 		// Display changes preview
 		display.ShowChangesPreview(fileStats)
-	}
 }
