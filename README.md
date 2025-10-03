@@ -37,16 +37,17 @@ Looking to contribute? Check out:
 
 ## Supported LLM Providers
 
-You can use either **Google Gemini** or **Grok** as the LLM to generate commit messages:
+You can use **Google Gemini**, **Grok**, **Claude**, or **ChatGPT** as the LLM to generate commit messages:
 
 ### Environment Variables
 
-| Variable         | Values                                   | Description               |
-| ---------------- | ---------------------------------------- | ------------------------- |
-| `COMMIT_LLM`     | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider  |
-| `GEMINI_API_KEY` | Your API key                             | Required if using Gemini  |
-| `GROK_API_KEY`   | Your API key                             | Required if using Grok    |
-| `OPENAI_API_KEY` | Your API key                             | Required if using ChatGPT |
+| Variable | Values | Description |
+| :--- | :--- | :--- |
+| `COMMIT_LLM` | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider |
+| `GEMINI_API_KEY` | Your API key | Required if using Gemini |
+| `GROK_API_KEY` | Your API key | Required if using Grok |
+| `CLAUDE_API_KEY` | Your API key | Required if using Claude |
+| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
 
 ---
 
