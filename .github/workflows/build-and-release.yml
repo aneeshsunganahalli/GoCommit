@@ -90,6 +90,8 @@ jobs:
 
   package:
     name: Package Binaries
+    permissions:
+      contents: read
     needs: [auto-tag, build]
     runs-on: ubuntu-latest
     # Always run after build
