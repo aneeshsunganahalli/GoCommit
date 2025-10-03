@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dfanso/commit-msg/src/chatgpt"
 	"github.com/dfanso/commit-msg/src/gemini"
 	"github.com/dfanso/commit-msg/src/grok"
 	"github.com/dfanso/commit-msg/src/types"
-	"github.com/dfanso/commit-msg/src/chatgpt"
 	"github.com/pterm/pterm"
 )
 
@@ -68,6 +68,28 @@ func main() {
 		Path: currentDir,
 	}
 
+	// Get file statistics before fetching changes
+	fileStats, err := getFileStatistics(&repoConfig)
+	if err != nil {
+		log.Fatalf("Failed to get file statistics: %v", err)
+	}
+
+	// Display header
+	pterm.DefaultHeader.WithFullWidth().
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
+		WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
+		Println("🚀 Commit Message Generator")
+
+	pterm.Println()
+
+	// Display file statistics with icons
+	displayFileStatistics(fileStats)
+
+	if fileStats.TotalFiles == 0 {
+		pterm.Warning.Println("No changes detected in the Git repository.")
+		return
+	}
+
 	// Get the changes
 	changes, err := getGitChanges(&repoConfig)
 	if err != nil {
@@ -75,15 +97,19 @@ func main() {
 	}
 
 	if len(changes) == 0 {
-		fmt.Println("No changes detected in the Git repository.")
+		pterm.Warning.Println("No changes detected in the Git repository.")
 		return
 	}
 
-	spinnerGenerating, err := pterm.DefaultSpinner.Start("Generating commit message...")
+	pterm.Println()
+
+	// Show generating spinner
+	spinnerGenerating, err := pterm.DefaultSpinner.
+		WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
+		Start("🤖 Generating commit message...")
 	if err != nil {
 		log.Fatalf("Failed to start spinner: %v", err)
 	}
-	defer spinnerGenerating.Stop()
 
 	var commitMsg string
 	if os.Getenv("COMMIT_LLM") == "google" {
@@ -93,17 +119,23 @@ func main() {
 	} else {
 		commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 	}
-	
 
 	if err != nil {
-		log.Fatalf("Failed to generate commit message: %v", err)
+		spinnerGenerating.Fail("Failed to generate commit message")
+		log.Fatalf("Error: %v", err)
 	}
 
-	spinnerGenerating.Success()
+	spinnerGenerating.Success("✅ Commit message generated successfully!")
 
-	// Display the commit message
-	pterm.DefaultBasicText.Println()
-	pterm.DefaultBasicText.Println(commitMsg)
+	pterm.Println()
+
+	// Display the commit message in a styled panel
+	displayCommitMessage(commitMsg)
+
+	pterm.Println()
+
+	// Display changes preview
+	displayChangesPreview(fileStats)
 }
 
 // Check if directory is a git repository
@@ -236,4 +268,204 @@ func isSmallFile(filename string) bool {
 	}
 
 	return info.Size() <= maxSize
+}
+
+// FileStatistics holds statistics about changed files
+type FileStatistics struct {
+	StagedFiles    []string
+	UnstagedFiles  []string
+	UntrackedFiles []string
+	TotalFiles     int
+	LinesAdded     int
+	LinesDeleted   int
+}
+
+// Get file statistics for display
+func getFileStatistics(config *types.RepoConfig) (*FileStatistics, error) {
+	stats := &FileStatistics{
+		StagedFiles:    []string{},
+		UnstagedFiles:  []string{},
+		UntrackedFiles: []string{},
+	}
+
+	// Get staged files
+	stagedCmd := exec.Command("git", "-C", config.Path, "diff", "--name-only", "--cached")
+	stagedOutput, err := stagedCmd.Output()
+	if err == nil && len(stagedOutput) > 0 {
+		stats.StagedFiles = strings.Split(strings.TrimSpace(string(stagedOutput)), "\n")
+	}
+
+	// Get unstaged files
+	unstagedCmd := exec.Command("git", "-C", config.Path, "diff", "--name-only")
+	unstagedOutput, err := unstagedCmd.Output()
+	if err == nil && len(unstagedOutput) > 0 {
+		stats.UnstagedFiles = strings.Split(strings.TrimSpace(string(unstagedOutput)), "\n")
+	}
+
+	// Get untracked files
+	untrackedCmd := exec.Command("git", "-C", config.Path, "ls-files", "--others", "--exclude-standard")
+	untrackedOutput, err := untrackedCmd.Output()
+	if err == nil && len(untrackedOutput) > 0 {
+		stats.UntrackedFiles = strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
+	}
+
+	// Filter empty strings
+	stats.StagedFiles = filterEmpty(stats.StagedFiles)
+	stats.UnstagedFiles = filterEmpty(stats.UnstagedFiles)
+	stats.UntrackedFiles = filterEmpty(stats.UntrackedFiles)
+
+	stats.TotalFiles = len(stats.StagedFiles) + len(stats.UnstagedFiles) + len(stats.UntrackedFiles)
+
+	// Get line statistics from staged changes
+	if len(stats.StagedFiles) > 0 {
+		statCmd := exec.Command("git", "-C", config.Path, "diff", "--cached", "--numstat")
+		statOutput, err := statCmd.Output()
+		if err == nil {
+			lines := strings.Split(strings.TrimSpace(string(statOutput)), "\n")
+			for _, line := range lines {
+				parts := strings.Fields(line)
+				if len(parts) >= 2 {
+					if added := parts[0]; added != "-" {
+						var addedNum int
+						fmt.Sscanf(added, "%d", &addedNum)
+						stats.LinesAdded += addedNum
+					}
+					if deleted := parts[1]; deleted != "-" {
+						var deletedNum int
+						fmt.Sscanf(deleted, "%d", &deletedNum)
+						stats.LinesDeleted += deletedNum
+					}
+				}
+			}
+		}
+	}
+
+	return stats, nil
+}
+
+// Filter empty strings from slice
+func filterEmpty(slice []string) []string {
+	filtered := []string{}
+	for _, s := range slice {
+		if s != "" {
+			filtered = append(filtered, s)
+		}
+	}
+	return filtered
+}
+
+// Display file statistics with colored output
+func displayFileStatistics(stats *FileStatistics) {
+	pterm.DefaultSection.Println("📊 Changes Summary")
+
+	// Create bullet list items
+	bulletItems := []pterm.BulletListItem{}
+
+	if len(stats.StagedFiles) > 0 {
+		bulletItems = append(bulletItems, pterm.BulletListItem{
+			Level:       0,
+			Text:        pterm.Green(fmt.Sprintf("✅ Staged files: %d", len(stats.StagedFiles))),
+			TextStyle:   pterm.NewStyle(pterm.FgGreen),
+			BulletStyle: pterm.NewStyle(pterm.FgGreen),
+		})
+		for i, file := range stats.StagedFiles {
+			if i < 5 { // Show first 5 files
+				bulletItems = append(bulletItems, pterm.BulletListItem{
+					Level: 1,
+					Text:  file,
+				})
+			}
+		}
+		if len(stats.StagedFiles) > 5 {
+			bulletItems = append(bulletItems, pterm.BulletListItem{
+				Level: 1,
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.StagedFiles)-5)),
+			})
+		}
+	}
+
+	if len(stats.UnstagedFiles) > 0 {
+		bulletItems = append(bulletItems, pterm.BulletListItem{
+			Level:       0,
+			Text:        pterm.Yellow(fmt.Sprintf("⚠️  Unstaged files: %d", len(stats.UnstagedFiles))),
+			TextStyle:   pterm.NewStyle(pterm.FgYellow),
+			BulletStyle: pterm.NewStyle(pterm.FgYellow),
+		})
+		for i, file := range stats.UnstagedFiles {
+			if i < 3 {
+				bulletItems = append(bulletItems, pterm.BulletListItem{
+					Level: 1,
+					Text:  file,
+				})
+			}
+		}
+		if len(stats.UnstagedFiles) > 3 {
+			bulletItems = append(bulletItems, pterm.BulletListItem{
+				Level: 1,
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UnstagedFiles)-3)),
+			})
+		}
+	}
+
+	if len(stats.UntrackedFiles) > 0 {
+		bulletItems = append(bulletItems, pterm.BulletListItem{
+			Level:       0,
+			Text:        pterm.Cyan(fmt.Sprintf("📝 Untracked files: %d", len(stats.UntrackedFiles))),
+			TextStyle:   pterm.NewStyle(pterm.FgCyan),
+			BulletStyle: pterm.NewStyle(pterm.FgCyan),
+		})
+		for i, file := range stats.UntrackedFiles {
+			if i < 3 {
+				bulletItems = append(bulletItems, pterm.BulletListItem{
+					Level: 1,
+					Text:  file,
+				})
+			}
+		}
+		if len(stats.UntrackedFiles) > 3 {
+			bulletItems = append(bulletItems, pterm.BulletListItem{
+				Level: 1,
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UntrackedFiles)-3)),
+			})
+		}
+	}
+
+	pterm.DefaultBulletList.WithItems(bulletItems).Render()
+}
+
+// Display commit message in a styled panel
+func displayCommitMessage(message string) {
+	pterm.DefaultSection.Println("📝 Generated Commit Message")
+
+	// Create a panel with the commit message
+	panel := pterm.DefaultBox.
+		WithTitle("Commit Message").
+		WithTitleTopCenter().
+		WithBoxStyle(pterm.NewStyle(pterm.FgLightGreen)).
+		WithHorizontalString("─").
+		WithVerticalString("│").
+		WithTopLeftCornerString("┌").
+		WithTopRightCornerString("┐").
+		WithBottomLeftCornerString("└").
+		WithBottomRightCornerString("┘")
+
+	panel.Println(pterm.LightGreen(message))
+}
+
+// Display changes preview
+func displayChangesPreview(stats *FileStatistics) {
+	pterm.DefaultSection.Println("🔍 Changes Preview")
+
+	// Create info boxes
+	if stats.LinesAdded > 0 || stats.LinesDeleted > 0 {
+		infoData := [][]string{
+			{"Lines Added", pterm.Green(fmt.Sprintf("+%d", stats.LinesAdded))},
+			{"Lines Deleted", pterm.Red(fmt.Sprintf("-%d", stats.LinesDeleted))},
+			{"Total Files", pterm.Cyan(fmt.Sprintf("%d", stats.TotalFiles))},
+		}
+
+		pterm.DefaultTable.WithHasHeader(false).WithData(infoData).Render()
+	} else {
+		pterm.Info.Println("No line statistics available for unstaged changes")
+	}
 }
