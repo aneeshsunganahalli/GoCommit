@@ -19,6 +19,7 @@ This project is participating in [Hacktoberfest](https://hacktoberfest.com)! We 
 ## Code of Conduct
 
 This project adheres to the Hacktoberfest values:
+
 - **Everyone is welcome** - We value diversity and inclusivity
 - **Quantity is fun, quality is key** - We prioritize meaningful contributions
 - **Short-term action, long-term impact** - Your contributions help build the future
@@ -30,6 +31,7 @@ Please be respectful and constructive in all interactions.
 ### 🐛 Reporting Bugs
 
 Before creating a bug report:
+
 - Check the [existing issues](https://github.com/dfanso/commit-msg/issues) to avoid duplicates
 - Collect information about the bug:
   - OS and version
@@ -40,6 +42,7 @@ Before creating a bug report:
 ### 💡 Suggesting Enhancements
 
 Enhancement suggestions are welcome! Please:
+
 - Use a clear and descriptive title
 - Provide a detailed description of the proposed feature
 - Explain why this enhancement would be useful
@@ -51,6 +54,7 @@ Look for issues labeled `good first issue` or `help wanted` - these are great fo
 ### 📝 Documentation
 
 Improving documentation is always appreciated:
+
 - Fix typos or unclear instructions
 - Add examples
 - Improve README clarity
@@ -78,10 +82,12 @@ Improving documentation is always appreciated:
 - API key for either:
   - Google Gemini (`GEMINI_API_KEY`)
   - Grok (`GROK_API_KEY`)
+  - Claude (`CLAUDE_API_KEY`)
 
 ### Environment Setup
 
 1. Set up your environment variables:
+
    ```bash
    export COMMIT_LLM=gemini  # or "grok"
    export GEMINI_API_KEY=your-api-key-here
@@ -90,11 +96,13 @@ Improving documentation is always appreciated:
    ```
 
 2. Install dependencies:
+
    ```bash
    go mod download
    ```
 
 3. Run the application:
+
    ```bash
    go run src/main.go .
    ```
@@ -107,6 +115,7 @@ Improving documentation is always appreciated:
 ### Testing Your Changes
 
 Before submitting a PR:
+
 1. Test the application in a Git repository
 2. Verify both LLM providers work (if applicable)
 3. Check for any errors or warnings
@@ -124,6 +133,7 @@ Before submitting a PR:
 ### PR Title Format
 
 Use conventional commit format:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -151,7 +161,7 @@ func GenerateMessage(changes string, apiKey string) (string, error) {
     if changes == "" {
         return "", fmt.Errorf("no changes provided")
     }
-    
+
     // Implementation here
     return message, nil
 }
@@ -170,6 +180,7 @@ func GenerateMessage(changes string, apiKey string) (string, error) {
 ## Questions?
 
 Feel free to:
+
 - Open an issue with the `question` label
 - Reach out to the maintainers
 - Check existing issues and PRs for similar questions
@@ -181,4 +192,3 @@ By contributing, you agree that your contributions will be licensed under the sa
 ---
 
 Thank you for contributing to commit-msg! 🚀
-
