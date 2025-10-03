@@ -26,9 +26,11 @@ Looking to contribute? Check out:
 ## Features
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
-🔄 **Multiple LLM Support** - Choose between Google Gemini or Grok  
+🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, or ChatGPT  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
-🚀 **Easy to Use** - Simple CLI interface  
+📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
+📊 **File Statistics Display** - Visual preview of changed files and line counts  
+🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
 ⚡ **Fast** - Quick generation of commit messages  
 
 ## Supported LLM Providers
@@ -39,9 +41,10 @@ You can use either **Google Gemini** or **Grok** as the LLM to generate commit m
 
 | Variable | Values | Description |
 |----------|--------|-------------|
-| `COMMIT_LLM` | `gemini` or `grok` | Choose your LLM provider |
+| `COMMIT_LLM` | `gemini`, `grok`, or `chatgpt` | Choose your LLM provider |
 | `GEMINI_API_KEY` | Your API key | Required if using Gemini |
 | `GROK_API_KEY` | Your API key | Required if using Grok |
+| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
 
 ---
 
@@ -128,15 +131,22 @@ git add .
 # Generate commit message
 commit .
 
+# The tool will display:
+# - File statistics (staged, unstaged, untracked)
+# - Generated commit message in a styled box
+# - Automatically copy to clipboard
 # Output: "feat: add hello world console log to app.js"
+# You can now paste it with Ctrl+V (or Cmd+V on macOS)
 ```
 
 ### Use Cases
 
 - 📝 Generate commit messages for staged changes
 - 🔍 Analyze both staged and unstaged changes
-- 📊 Get context from recent commits
+- 📊 Get context from recent commits and file statistics
 - ✅ Create conventional commit messages
+- 📋 Auto-copy to clipboard for immediate use
+- 🎨 Beautiful terminal UI with file statistics and previews
 
 ---
 
