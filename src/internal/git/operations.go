@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dfanso/commit-msg/src/internal/scrubber"
 	"github.com/dfanso/commit-msg/src/internal/utils"
 	"github.com/dfanso/commit-msg/src/types"
 )
@@ -100,7 +101,14 @@ func GetChanges(config *types.RepoConfig) (string, error) {
                     continue
                 }
                 changes.WriteString(fmt.Sprintf("Content of new file %s:\n", file))
-                changes.WriteString(string(fileContent))
+                
+                // Use special scrubbing for .env files
+                if strings.HasSuffix(strings.ToLower(file), ".env") || 
+                   strings.Contains(strings.ToLower(file), ".env.") {
+                    changes.WriteString(scrubber.ScrubEnvFile(string(fileContent)))
+                } else {
+                    changes.WriteString(string(fileContent))
+                }
                 changes.WriteString("\n\n")
             }
         }
@@ -115,5 +123,8 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 		changes.WriteString("\n")
 	}
 
-	return changes.String(), nil
+	// Scrub sensitive data before returning
+	scrubbedChanges := scrubber.ScrubDiff(changes.String())
+	
+	return scrubbedChanges, nil
 }
