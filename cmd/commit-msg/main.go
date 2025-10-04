@@ -118,9 +118,7 @@ func main() {
 		case "chatgpt":
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
 		case "claude":
-			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
-		case "grok":
-			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
+			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)	
 		default:
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 		}
