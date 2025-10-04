@@ -11,7 +11,7 @@
 
 Below is a sample execution of `commit-msg`:
 
-![Commit-msg GIF](commit.gif)
+![Commit-msg GIF](assets/commit.gif)
 
 Before running the application, ensure you have set the system environment variables. and add commit.exe to path variables (same for linux macOS)
 
@@ -102,7 +102,7 @@ cd commit-msg
 go mod download
 
 # Build the executable
-go build -o commit src/main.go
+go build -o commit cmd/commit-msg/main.go
 
 # (Optional) Install to GOPATH
 go install
@@ -123,7 +123,7 @@ commit .
 Or if running from source:
 
 ```bash
-go run src/main.go .
+go run cmd/commit-msg/main.go .
 ```
 
 ### Example Workflow

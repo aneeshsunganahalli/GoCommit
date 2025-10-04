@@ -104,12 +104,12 @@ Improving documentation is always appreciated:
 3. Run the application:
 
    ```bash
-   go run src/main.go .
+   go run cmd/commit-msg/main.go .
    ```
 
 4. Build the executable:
    ```bash
-   go build -o commit.exe src/main.go
+   go build -o commit.exe cmd/commit-msg/main.go
    ```
 
 ### Testing Your Changes
