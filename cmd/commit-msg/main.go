@@ -112,13 +112,16 @@ func main() {
 		}
 
 		var commitMsg string
-		if os.Getenv("COMMIT_LLM") == "gemini" {
+		switch commitLLM {
+		case "gemini":
 			commitMsg, err = gemini.GenerateCommitMessage(config, changes, apiKey)
-		} else if os.Getenv("COMMIT_LLM") == "chatgpt" {
+		case "chatgpt":
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
-		} else if os.Getenv("COMMIT_LLM") == "claude" {
+		case "claude":
 			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
-		} else {
+		case "grok":
+			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
+		default:
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 		}
 
