@@ -23,10 +23,10 @@ func main() {
     var apiKey string
 
     switch commitLLM {
-    case "google":
-        apiKey = os.Getenv("GOOGLE_API_KEY")
+    case "gemini":
+        apiKey = os.Getenv("GEMINI_API_KEY")
         if apiKey == "" {
-            log.Fatalf("GOOGLE_API_KEY is not set")
+            log.Fatalf("GEMINI_API_KEY is not set")
         }
     case "grok":
         apiKey = os.Getenv("GROK_API_KEY")
@@ -112,7 +112,7 @@ func main() {
 		}
 
 		var commitMsg string
-		if os.Getenv("COMMIT_LLM") == "google" {
+		if os.Getenv("COMMIT_LLM") == "gemini" {
 			commitMsg, err = gemini.GenerateCommitMessage(config, changes, apiKey)
 		} else if os.Getenv("COMMIT_LLM") == "chatgpt" {
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
