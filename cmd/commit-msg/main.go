@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/atotto/clipboard"
-	"github.com/dfanso/commit-msg/src/chatgpt"
-	"github.com/dfanso/commit-msg/src/claude"
-	"github.com/dfanso/commit-msg/src/gemini"
-	"github.com/dfanso/commit-msg/src/grok"
-	"github.com/dfanso/commit-msg/src/internal/display"
-	"github.com/dfanso/commit-msg/src/internal/git"
-	"github.com/dfanso/commit-msg/src/internal/stats"
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/internal/chatgpt"
+	"github.com/dfanso/commit-msg/internal/claude"
+	"github.com/dfanso/commit-msg/internal/display"
+	"github.com/dfanso/commit-msg/internal/gemini"
+	"github.com/dfanso/commit-msg/internal/git"
+	"github.com/dfanso/commit-msg/internal/grok"
+	"github.com/dfanso/commit-msg/internal/stats"
+	"github.com/dfanso/commit-msg/pkg/types"
 	"github.com/pterm/pterm"
 )
 

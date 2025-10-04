@@ -5,9 +5,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/dfanso/commit-msg/src/internal/display"
-	"github.com/dfanso/commit-msg/src/internal/utils"
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/internal/display"
+	"github.com/dfanso/commit-msg/internal/utils"
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 // GetFileStatistics collects comprehensive file statistics from Git
