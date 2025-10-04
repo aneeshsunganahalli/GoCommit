@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string) (string, error) {

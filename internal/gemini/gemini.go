@@ -7,7 +7,7 @@ import (
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string) (string, error) {

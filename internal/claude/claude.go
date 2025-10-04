@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 type ClaudeRequest struct {

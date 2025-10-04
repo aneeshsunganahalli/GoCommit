@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dfanso/commit-msg/src/internal/scrubber"
-	"github.com/dfanso/commit-msg/src/internal/utils"
-	"github.com/dfanso/commit-msg/src/types"
+	"github.com/dfanso/commit-msg/internal/scrubber"
+	"github.com/dfanso/commit-msg/internal/utils"
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 // IsRepository checks if a directory is a git repository
