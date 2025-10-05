@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	
+	"errors"
 	"fmt"
 
 	"github.com/dfanso/commit-msg/cmd/cli/store"
@@ -24,12 +24,13 @@ func SetupLLM() error {
 
 	apiKeyPrompt := promptui.Prompt{
 		Label: "Enter API Key",
+		Mask: '*',
 		
 	}
 
 	apiKey, err := apiKeyPrompt.Run()
 	if err != nil {
-		return fmt.Errorf("invalid API Key")
+		return fmt.Errorf("failed to read API Key: %w", err)
 	}
 
 	LLMConfig := store.LLMProvider{
@@ -55,9 +56,9 @@ func UpdateLLM() error {
 		return err
 	}
 
-	if len(SavedModels.LLMProviders) == 0{
-		 fmt.Println("No model exists, Please add atleast one model")
-		 return nil
+	if len(SavedModels.LLMProviders) == 0 {
+		 return errors.New("no model exists, Please add atleast one model Run: 'commit llm setup'")
+		 
 	}
 
 	models := []string{}

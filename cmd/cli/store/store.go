@@ -44,8 +44,7 @@ func Save(LLMConfig LLMProvider) error {
 	data, err := os.ReadFile(configPath)
 	if errors.Is(err, os.ErrNotExist){
 		data = []byte("{}")
-	} else if
-	 err != nil {
+	} else if err != nil {
 		return err
 	}
 
@@ -166,15 +165,17 @@ func DefaultLLMKey() (*LLMProvider, error) {
 		return nil, err
 	}
 
-
-	if len(data) > 0 {
+	fmt.Println(len(data))
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("config file is empty")
+		return nil, errors.New("config file is empty, Please add atlead one LLM Key")
 	}
+
+	
 
 	defaultLLM := cfg.Default
 
@@ -289,8 +290,7 @@ func DeleteModel(Model string) error {
 
 	if Model == cfg.Default {
 		if len(cfg.LLMProviders) > 1 {
-			fmt.Println("Please set other model as default, Cant delete default model")
-			return nil
+			return fmt.Errorf("cannot delete %s while it is default, set other model default first", Model)
 		} else {
 			return os.WriteFile(configPath, []byte("{}"), 0600)
 		}
