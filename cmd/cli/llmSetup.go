@@ -11,7 +11,7 @@ import (
 
 func SetupLLM() error {
 
-	providers := []string{"OpenAI", "Claude", "Gemini", "Grok"}
+	providers := []string{"OpenAI", "Claude", "Gemini", "Grok", "Ollama"}
 	prompt := promptui.Select{
 		Label: "Select LLM",
 		Items: providers,
@@ -22,15 +22,21 @@ func SetupLLM() error {
 		return fmt.Errorf("prompt failed")
 	}
 
-	apiKeyPrompt := promptui.Prompt{
-		Label: "Enter API Key",
-		Mask: '*',
-		
-	}
+	var apiKey string
+	
+	// Skip API key prompt for Ollama (local LLM)
+	if model != "Ollama" {
+		apiKeyPrompt := promptui.Prompt{
+			Label: "Enter API Key",
+			Mask: '*',
+		}
 
-	apiKey, err := apiKeyPrompt.Run()
-	if err != nil {
-		return fmt.Errorf("failed to read API Key: %w", err)
+		apiKey, err = apiKeyPrompt.Run()
+		if err != nil {
+			return fmt.Errorf("failed to read API Key: %w", err)
+		}
+	} else {
+		apiKey = "" // No API key needed for Ollama
 	}
 
 	LLMConfig := store.LLMProvider{
