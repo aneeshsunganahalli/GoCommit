@@ -172,7 +172,7 @@ func DefaultLLMKey() (*LLMProvider, error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("config file is empty, Please add atlead one LLM Key")
+		return nil, errors.New("config file is empty, Please add at least one LLM Key")
 	}
 
 	
@@ -214,7 +214,7 @@ func ListSavedModels() (*Config, error){
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("config file is empty, Please add atlead one LLM Key")
+		return nil, errors.New("config file is empty, Please add at least one LLM Key")
 	}
 
 
