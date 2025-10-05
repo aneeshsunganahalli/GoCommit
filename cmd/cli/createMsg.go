@@ -73,6 +73,10 @@ func CreateCommitMsg () {
 
 		if fileStats.TotalFiles == 0 {
 			pterm.Warning.Println("No changes detected in the Git repository.")
+			pterm.Info.Println("Tips:")
+			pterm.Info.Println("  - Stage your changes with: git add .")
+			pterm.Info.Println("  - Check repository status with: git status")
+			pterm.Info.Println("  - Make sure you're in the correct Git repository")
 			return
 		}
 
@@ -85,6 +89,10 @@ func CreateCommitMsg () {
 
 		if len(changes) == 0 {
 			pterm.Warning.Println("No changes detected in the Git repository.")
+			pterm.Info.Println("Tips:")
+			pterm.Info.Println("  - Stage your changes with: git add .")
+			pterm.Info.Println("  - Check repository status with: git status")
+			pterm.Info.Println("  - Make sure you're in the correct Git repository")
 			return
 		}
 
