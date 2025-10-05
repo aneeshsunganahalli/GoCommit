@@ -178,6 +178,51 @@ Select: Delete
 ```
 ---
 
+## Getting API Keys
+
+**Google Gemini:**
+
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+
+
+**Grok (X.AI):**
+
+1. Visit [X.AI Console](https://console.x.ai/)
+2. Generate an API key
+
+
+**Groq:**
+
+1. Sign up at [Groq Cloud](https://console.groq.com/)
+2. Create an API key
+
+
+**Claude (Anthropic):**
+
+1.  Visit the [Anthropic Console](https://console.anthropic.com/)
+2.  Create a new API key
+
+
+**OpenAI (ChatGPT):**
+
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create a new API key
+
+
+**Ollama (Local LLM):**
+
+1. Install Ollama: Visit [Ollama.ai](https://ollama.ai/) and follow installation instructions
+2. Start Ollama: `ollama serve`
+3. Pull a model: `ollama pull llama3` 
+4. Set environment variables:
+   ```bash
+   export COMMIT_LLM=ollama
+   export OLLAMA_MODEL=llama3  # llama3 by default
+   ```
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
