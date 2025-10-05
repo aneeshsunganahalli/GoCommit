@@ -21,7 +21,7 @@ type OllamaResponse struct {
 	Done bool `json:"done"`
 }
 
-func GenerateCommitMessage(config *types.Config, changes string, url string, model string) (string, error) {
+func GenerateCommitMessage(_ *types.Config, changes string, url string, model string) (string, error) {
 	// Use llama3:latest as the default model
 	if model == "" {
 		model = "llama3:latest" 
