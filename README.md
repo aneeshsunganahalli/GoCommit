@@ -175,6 +175,13 @@ commit .
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
 
+**Groq:**
+
+1. Sign up at [Groq Cloud](https://console.groq.com/)
+2. Create an API key
+3. Set the `GROQ_API_KEY` environment variable
+4. _(Optional)_ Set `GROQ_MODEL` or `GROQ_API_URL` to override defaults
+
 **Claude (Anthropic):**
 
 1.  Visit the [Anthropic Console](https://console.anthropic.com/)
