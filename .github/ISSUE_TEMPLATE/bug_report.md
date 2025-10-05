@@ -24,7 +24,7 @@ What actually happened.
 - OS: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
 - Go Version: [e.g., 1.23.4]
 - commit-msg Version: [e.g., latest from main]
-- LLM Provider: [Gemini or Grok]
+- LLM Provider: [Gemini, Grok, Groq, Claude, OpenAI, Ollama]
 
 ## Additional Context
 Add any other context about the problem here, such as:
