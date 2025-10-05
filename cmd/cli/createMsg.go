@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"os"
 
 	"github.com/atotto/clipboard"
@@ -23,7 +22,8 @@ func CreateCommitMsg () {
     // Validate COMMIT_LLM and required API keys
 	useLLM,err := store.DefaultLLMKey()
 	if err != nil {
-		log.Fatal(err)
+		pterm.Error.Printf("Error: %v\n", err)
+		os.Exit(1)
 	}
 
 	commitLLM := useLLM.LLM
@@ -33,12 +33,14 @@ func CreateCommitMsg () {
 		// Get current directory
 		currentDir, err := os.Getwd()
 		if err != nil {
-			log.Fatalf("Failed to get current directory: %v", err)
+			pterm.Error.Printf("Failed to get current directory: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Check if current directory is a git repository
 		if !git.IsRepository(currentDir) {
-			log.Fatalf("Current directory is not a Git repository: %s", currentDir)
+			pterm.Error.Printf("Current directory is not a Git repository: %s\n", currentDir)
+			os.Exit(1)
 		}
 
 		// Create a minimal config for the API
@@ -54,7 +56,8 @@ func CreateCommitMsg () {
 		// Get file statistics before fetching changes
 		fileStats, err := stats.GetFileStatistics(&repoConfig)
 		if err != nil {
-			log.Fatalf("Failed to get file statistics: %v", err)
+			pterm.Error.Printf("Failed to get file statistics: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Display header
@@ -76,7 +79,8 @@ func CreateCommitMsg () {
 		// Get the changes
 		changes, err := git.GetChanges(&repoConfig)
 		if err != nil {
-			log.Fatalf("Failed to get Git changes: %v", err)
+			pterm.Error.Printf("Failed to get Git changes: %v\n", err)
+			os.Exit(1)
 		}
 
 		if len(changes) == 0 {
@@ -91,7 +95,8 @@ func CreateCommitMsg () {
 			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
 			Start("🤖 Generating commit message...")
 		if err != nil {
-			log.Fatalf("Failed to start spinner: %v", err)
+			pterm.Error.Printf("Failed to start spinner: %v\n", err)
+			os.Exit(1)
 		}
 
 		var commitMsg string
@@ -114,7 +119,8 @@ func CreateCommitMsg () {
 		
 		if err != nil {
 			spinnerGenerating.Fail("Failed to generate commit message")
-			log.Fatalf("Error: %v", err)
+			pterm.Error.Printf("Error: %v\n", err)
+			os.Exit(1)
 		}
 
 		spinnerGenerating.Success("✅ Commit message generated successfully!")
