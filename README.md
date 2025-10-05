@@ -49,7 +49,7 @@ You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** 
 | `CLAUDE_API_KEY` | Your API key | Required if using Claude |
 | `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
 | `OLLAMA_URL` | URL (optional) | Ollama server URL (default: http://localhost:11434/api/generate) |
-| `OLLAMA_MODEL` | Model name (optional) | Ollama model to use (default: qwen2:0.5b) |
+| `OLLAMA_MODEL` | Model name (optional) | Ollama model to use (default: llama3) |
 
 ---
 
