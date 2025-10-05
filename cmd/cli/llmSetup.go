@@ -84,7 +84,7 @@ func UpdateLLM() error {
 	}
 	opNo,_,err := prompt.Run()
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	apiKeyprompt := promptui.Prompt {

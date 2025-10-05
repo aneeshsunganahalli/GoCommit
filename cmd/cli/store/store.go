@@ -213,8 +213,7 @@ func ListSavedModels() (*Config, error){
 			return nil, err
 		}
 	} else {
-		fmt.Println("Config file is empty, Please add atlead one LLM Key")
-		return nil, errors.New("config file is empty")
+		return nil, errors.New("config file is empty, Please add atlead one LLM Key")
 	}
 
 
