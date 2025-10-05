@@ -22,7 +22,7 @@ func CreateCommitMsg () {
     // Validate COMMIT_LLM and required API keys
 	useLLM,err := store.DefaultLLMKey()
 	if err != nil {
-		pterm.Error.Printf("Error: %v\n", err)
+		pterm.Error.Printf("No LLM configured. Run: commit llm setup\n")
 		os.Exit(1)
 	}
 
@@ -64,7 +64,7 @@ func CreateCommitMsg () {
 		pterm.DefaultHeader.WithFullWidth().
 			WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
 			WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
-			Println("🚀 Commit Message Generator")
+			Println("Commit Message Generator")
 
 		pterm.Println()
 
@@ -93,7 +93,7 @@ func CreateCommitMsg () {
 		// Show generating spinner
 		spinnerGenerating, err := pterm.DefaultSpinner.
 			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
-			Start("🤖 Generating commit message...")
+			Start("Generating commit message...")
 		if err != nil {
 			pterm.Error.Printf("Failed to start spinner: %v\n", err)
 			os.Exit(1)
@@ -119,7 +119,18 @@ func CreateCommitMsg () {
 		
 		if err != nil {
 			spinnerGenerating.Fail("Failed to generate commit message")
-			pterm.Error.Printf("Error: %v\n", err)
+			switch commitLLM {
+			case "Gemini":
+				pterm.Error.Printf("Gemini API error. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n")
+			case "OpenAI":
+				pterm.Error.Printf("OpenAI API error. Check your OPENAI_API_KEY environment variable or run: commit llm setup\n")
+			case "Claude":
+				pterm.Error.Printf("Claude API error. Check your CLAUDE_API_KEY environment variable or run: commit llm setup\n")
+			case "Grok":
+				pterm.Error.Printf("Grok API error. Check your GROK_API_KEY environment variable or run: commit llm setup\n")
+			default:
+				pterm.Error.Printf("LLM API error: %v\n", err)
+			}
 			os.Exit(1)
 		}
 
