@@ -81,6 +81,7 @@ Improving documentation is always appreciated:
 - Git
 - API key for either:
   - Google Gemini (`GEMINI_API_KEY`)
+  - Groq (`GROQ_API_KEY`)
   - Grok (`GROK_API_KEY`)
   - Claude (`CLAUDE_API_KEY`)
 
@@ -89,8 +90,10 @@ Improving documentation is always appreciated:
 1. Set up your environment variables:
 
    ```bash
-   export COMMIT_LLM=gemini  # or "grok"
+   export COMMIT_LLM=gemini  # or "groq" / "grok"
    export GEMINI_API_KEY=your-api-key-here
+   # OR
+   export GROQ_API_KEY=your-api-key-here
    # OR
    export GROK_API_KEY=your-api-key-here
    ```
