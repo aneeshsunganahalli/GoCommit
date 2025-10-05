@@ -28,7 +28,7 @@ Looking to contribute? Check out:
 ## Features
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
-🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude or ChatGPT  
+🔄 **Multiple LLM Support** - Choose between Google Gemini, Groq, Grok, Claude or ChatGPT  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
@@ -41,13 +41,14 @@ You can use **Google Gemini**, **Grok**, **Claude**, or **ChatGPT** as the LLM t
 
 ### Environment Variables
 
-| Variable | Values | Description |
-| :--- | :--- | :--- |
-| `COMMIT_LLM` | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider |
-| `GEMINI_API_KEY` | Your API key | Required if using Gemini |
-| `GROK_API_KEY` | Your API key | Required if using Grok |
-| `CLAUDE_API_KEY` | Your API key | Required if using Claude |
-| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
+| Variable         | Values                                           | Description               |
+| :--------------- | :----------------------------------------------- | :------------------------ |
+| `COMMIT_LLM`     | `gemini`, `groq`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider  |
+| `GEMINI_API_KEY` | Your API key                                     | Required if using Gemini  |
+| `GROQ_API_KEY`   | Your API key                                     | Required if using Groq    |
+| `GROK_API_KEY`   | Your API key                                     | Required if using Grok    |
+| `CLAUDE_API_KEY` | Your API key                                     | Required if using Claude  |
+| `OPENAI_API_KEY` | Your API key                                     | Required if using ChatGPT |
 
 ---
 
@@ -172,6 +173,13 @@ commit .
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
 3. Set the `GROK_API_KEY` environment variable
+
+**Groq:**
+
+1. Sign up at [Groq Cloud](https://console.groq.com/)
+2. Create an API key
+3. Set the `GROQ_API_KEY` environment variable
+4. _(Optional)_ Set `GROQ_MODEL` or `GROQ_API_URL` to override defaults
 
 **Claude (Anthropic):**
 
