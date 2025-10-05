@@ -93,7 +93,7 @@ func CreateCommitMsg () {
 		// Show generating spinner
 		spinnerGenerating, err := pterm.DefaultSpinner.
 			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
-			Start("Generating commit message...")
+			Start("Generating commit message with " + commitLLM + "...")
 		if err != nil {
 			pterm.Error.Printf("Failed to start spinner: %v\n", err)
 			os.Exit(1)
