@@ -27,9 +27,9 @@ func TestScrubAPIKeys(t *testing.T) {
 			expected: `OPENAI_API_KEY="[REDACTED_OPENAI_KEY]"`,
 		},
 		{
-			name:     "Google API key",
-			input:    `GOOGLE_API_KEY="AIzaSyDabcdefghijklmnopqrstuvwxyz12345"`,
-			expected: `GOOGLE_API_KEY="[REDACTED_GOOGLE_API_KEY]"`,
+			name:     "Gemini API key",
+			input:    `GEMINI_API_KEY="AIzaSyDabcdefghijklmnopqrstuvwxyz12345"`,
+			expected: `GEMINI_API_KEY="[REDACTED_GEMINI_API_KEY]"`,
 		},
 		{
 			name:     "Claude API key",

@@ -63,9 +63,9 @@ var (
 			Redact:  "${1}=\"[REDACTED_GITHUB_TOKEN]\"",
 		},
 		{
-			Name:    "Google API Key",
+			Name:    "Gemini API Key",
 			Pattern: regexp.MustCompile(`(?i)(google[_-]?api[_-]?key|GOOGLE_API_KEY|GEMINI_API_KEY)\s*[=:]\s*["\']?(AIza[a-zA-Z0-9_\-]{35})["\']?`),
-			Redact:  "${1}=\"[REDACTED_GOOGLE_API_KEY]\"",
+			Redact:  "${1}=\"[REDACTED_GEMINI_API_KEY]\"",
 		},
 		{
 			Name:    "OpenAI API Key",
