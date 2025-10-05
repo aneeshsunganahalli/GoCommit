@@ -18,6 +18,11 @@ import (
 
 // main is the entry point of the commit message generator
 func main() {
+	// Load the .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("warning: unable to load .env file: %v", err)
+	}
+
     // Validate COMMIT_LLM and required API keys
     commitLLM := os.Getenv("COMMIT_LLM")
     var apiKey string
