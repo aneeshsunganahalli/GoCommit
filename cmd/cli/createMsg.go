@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"os"
 
 	"github.com/atotto/clipboard"
@@ -24,7 +23,8 @@ func CreateCommitMsg () {
     // Validate COMMIT_LLM and required API keys
 	useLLM,err := store.DefaultLLMKey()
 	if err != nil {
-		log.Fatal(err)
+		pterm.Error.Printf("No LLM configured. Run: commit llm setup\n")
+		os.Exit(1)
 	}
 
 	commitLLM := useLLM.LLM
@@ -34,12 +34,14 @@ func CreateCommitMsg () {
 		// Get current directory
 		currentDir, err := os.Getwd()
 		if err != nil {
-			log.Fatalf("Failed to get current directory: %v", err)
+			pterm.Error.Printf("Failed to get current directory: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Check if current directory is a git repository
 		if !git.IsRepository(currentDir) {
-			log.Fatalf("Current directory is not a Git repository: %s", currentDir)
+			pterm.Error.Printf("Current directory is not a Git repository: %s\n", currentDir)
+			os.Exit(1)
 		}
 
 		// Create a minimal config for the API
@@ -55,14 +57,15 @@ func CreateCommitMsg () {
 		// Get file statistics before fetching changes
 		fileStats, err := stats.GetFileStatistics(&repoConfig)
 		if err != nil {
-			log.Fatalf("Failed to get file statistics: %v", err)
+			pterm.Error.Printf("Failed to get file statistics: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Display header
 		pterm.DefaultHeader.WithFullWidth().
 			WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
 			WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
-			Println("🚀 Commit Message Generator")
+			Println("Commit Message Generator")
 
 		pterm.Println()
 
@@ -71,17 +74,26 @@ func CreateCommitMsg () {
 
 		if fileStats.TotalFiles == 0 {
 			pterm.Warning.Println("No changes detected in the Git repository.")
+			pterm.Info.Println("Tips:")
+			pterm.Info.Println("  - Stage your changes with: git add .")
+			pterm.Info.Println("  - Check repository status with: git status")
+			pterm.Info.Println("  - Make sure you're in the correct Git repository")
 			return
 		}
 
 		// Get the changes
 		changes, err := git.GetChanges(&repoConfig)
 		if err != nil {
-			log.Fatalf("Failed to get Git changes: %v", err)
+			pterm.Error.Printf("Failed to get Git changes: %v\n", err)
+			os.Exit(1)
 		}
 
 		if len(changes) == 0 {
 			pterm.Warning.Println("No changes detected in the Git repository.")
+			pterm.Info.Println("Tips:")
+			pterm.Info.Println("  - Stage your changes with: git add .")
+			pterm.Info.Println("  - Check repository status with: git status")
+			pterm.Info.Println("  - Make sure you're in the correct Git repository")
 			return
 		}
 
@@ -90,9 +102,10 @@ func CreateCommitMsg () {
 		// Show generating spinner
 		spinnerGenerating, err := pterm.DefaultSpinner.
 			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
-			Start("🤖 Generating commit message...")
+			Start("Generating commit message with " + commitLLM + "...")
 		if err != nil {
-			log.Fatalf("Failed to start spinner: %v", err)
+			pterm.Error.Printf("Failed to start spinner: %v\n", err)
+			os.Exit(1)
 		}
 
 		var commitMsg string
@@ -126,7 +139,19 @@ func CreateCommitMsg () {
 		
 		if err != nil {
 			spinnerGenerating.Fail("Failed to generate commit message")
-			log.Fatalf("Error: %v", err)
+			switch commitLLM {
+			case "Gemini":
+				pterm.Error.Printf("Gemini API error. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n")
+			case "OpenAI":
+				pterm.Error.Printf("OpenAI API error. Check your OPENAI_API_KEY environment variable or run: commit llm setup\n")
+			case "Claude":
+				pterm.Error.Printf("Claude API error. Check your CLAUDE_API_KEY environment variable or run: commit llm setup\n")
+			case "Grok":
+				pterm.Error.Printf("Grok API error. Check your GROK_API_KEY environment variable or run: commit llm setup\n")
+			default:
+				pterm.Error.Printf("LLM API error: %v\n", err)
+			}
+			os.Exit(1)
 		}
 
 		spinnerGenerating.Success("✅ Commit message generated successfully!")
