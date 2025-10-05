@@ -28,7 +28,7 @@ Looking to contribute? Check out:
 ## Features
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
-🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude or ChatGPT  
+🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude, ChatGPT, or Ollama (local)  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
@@ -37,17 +37,19 @@ Looking to contribute? Check out:
 
 ## Supported LLM Providers
 
-You can use **Google Gemini**, **Grok**, **Claude**, or **ChatGPT** as the LLM to generate commit messages:
+You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** (local) as the LLM to generate commit messages:
 
 ### Environment Variables
 
 | Variable | Values | Description |
 | :--- | :--- | :--- |
-| `COMMIT_LLM` | `gemini`, `grok`, `claude`, or `chatgpt` | Choose your LLM provider |
+| `COMMIT_LLM` | `gemini`, `grok`, `claude`, `chatgpt`, or `ollama` | Choose your LLM provider |
 | `GEMINI_API_KEY` | Your API key | Required if using Gemini |
 | `GROK_API_KEY` | Your API key | Required if using Grok |
 | `CLAUDE_API_KEY` | Your API key | Required if using Claude |
 | `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
+| `OLLAMA_URL` | URL (optional) | Ollama server URL (default: http://localhost:11434/api/generate) |
+| `OLLAMA_MODEL` | Model name (optional) | Ollama model to use (default: qwen2:0.5b) |
 
 ---
 
@@ -184,6 +186,17 @@ commit .
 1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
 2. Create a new API key
 3. Set the `OPENAI_API_KEY` environment variable
+
+**Ollama (Local LLM):**
+
+1. Install Ollama: Visit [Ollama.ai](https://ollama.ai/) and follow installation instructions
+2. Start Ollama: `ollama serve`
+3. Pull a model: `ollama pull llama3` 
+4. Set environment variables:
+   ```bash
+   export COMMIT_LLM=ollama
+   export OLLAMA_MODEL=llama3  # llama3 by default
+   ```
 
 ---
 
