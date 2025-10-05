@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	
 	"fmt"
 
 	"github.com/dfanso/commit-msg/cmd/cli/store"
@@ -51,7 +52,12 @@ func UpdateLLM() error {
 	
 	SavedModels, err := store.ListSavedModels()
 	if err != nil {
-		fmt.Println(err)
+		return err
+	}
+
+	if len(SavedModels.LLMProviders) == 0{
+		 fmt.Println("No model exists, Please add atleast one model")
+		 return nil
 	}
 
 	models := []string{}
@@ -68,7 +74,7 @@ func UpdateLLM() error {
 
 	_,model,err := prompt.Run()
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	
@@ -98,15 +104,17 @@ func UpdateLLM() error {
 			if err !=  nil {
 				return err
 			}
-			store.UpdateAPIKey(model, apiKey)
+			err = store.UpdateAPIKey(model, apiKey)
+			if err != nil {
+				return err
+			}
 			fmt.Printf("%s API Key Updated", model)
 		case 2:
 			err := store.DeleteModel(model)
-			if err == nil {
-				fmt.Printf("%s model deleted", model)
+			if err != nil {
+				return err
 			}
-			
-				
+			fmt.Printf("%s model deleted", model)			
 	}
 
 	return nil

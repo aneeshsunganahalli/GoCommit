@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -37,22 +36,24 @@ func Save(LLMConfig LLMProvider) error {
 	if !isConfigExists {
 		err := createConfigFile(configPath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
 
 	data, err := os.ReadFile(configPath)
-	if err != nil {
-		fmt.Println("Error", err)
-		log.Fatal(err)
+	if errors.Is(err, os.ErrNotExist){
+		data = []byte("{}")
+	} else if
+	 err != nil {
+		return err
 	}
+
 
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			fmt.Println("unmarshal error", err)
-			log.Fatal(err)
+			return err
 		}
 	}
 	
@@ -162,7 +163,6 @@ func DefaultLLMKey() (*LLMProvider, error) {
 	
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		fmt.Println("Error", err)
 		return nil, err
 	}
 
@@ -170,7 +170,6 @@ func DefaultLLMKey() (*LLMProvider, error) {
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			fmt.Println("unmarshal error", err)
 			return nil, err
 		}
 	} else {
@@ -195,25 +194,23 @@ func ListSavedModels() (*Config, error){
 
 	configPath, err := getConfigPath()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	isConfigExists := checkConfig(configPath)
 	if !isConfigExists {
-		log.Fatal("config file not exists")
+		return nil, errors.New("config file not exists")
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		fmt.Println("Error", err)
-		log.Fatal(err)
+		return nil, err
 	}
 
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			fmt.Println("unmarshal error", err)
-			log.Fatal(err)
+			return nil, err
 		}
 	} else {
 		fmt.Println("Config file is empty, Please add atlead one LLM Key")
