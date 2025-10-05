@@ -11,8 +11,10 @@ import (
 	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
 	"github.com/dfanso/commit-msg/internal/grok"
+	"github.com/dfanso/commit-msg/internal/ollama"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
+	"github.com/joho/godotenv"
 	"github.com/pterm/pterm"
 )
 
@@ -48,6 +50,9 @@ func main() {
         if apiKey == "" {
             log.Fatalf("CLAUDE_API_KEY is not set")
         }
+	case "ollama":
+		// No API key required to run a local LLM
+		apiKey = ""
     default:
         log.Fatalf("Invalid COMMIT_LLM value: %s", commitLLM)
     }
@@ -124,6 +129,16 @@ func main() {
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
 		case "claude":
 			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)	
+		case "ollama":
+			url := os.Getenv("OLLAMA_URL")
+			if url == "" {
+				url = "http://localhost:11434/api/generate"
+			}
+			model := os.Getenv("OLLAMA_MODEL")
+			if model == "" {
+				model = "llama3:latest"
+			}
+			commitMsg, err = ollama.GenerateCommitMessage(config, changes, url, model)	
 		default:
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 		}
