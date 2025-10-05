@@ -11,13 +11,20 @@ import (
 	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
 	"github.com/dfanso/commit-msg/internal/grok"
+	"github.com/dfanso/commit-msg/internal/ollama"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
+	"github.com/joho/godotenv"
 	"github.com/pterm/pterm"
 )
 
 // main is the entry point of the commit message generator
 func main() {
+	// Load the .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("warning: unable to load .env file: %v", err)
+	}
+
     // Validate COMMIT_LLM and required API keys
     commitLLM := os.Getenv("COMMIT_LLM")
     var apiKey string
@@ -43,6 +50,9 @@ func main() {
         if apiKey == "" {
             log.Fatalf("CLAUDE_API_KEY is not set")
         }
+	case "ollama":
+		// No API key required to run a local LLM
+		apiKey = ""
     default:
         log.Fatalf("Invalid COMMIT_LLM value: %s", commitLLM)
     }
@@ -119,6 +129,16 @@ func main() {
 			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
 		case "claude":
 			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)	
+		case "ollama":
+			url := os.Getenv("OLLAMA_URL")
+			if url == "" {
+				url = "http://localhost:11434/api/generate"
+			}
+			model := os.Getenv("OLLAMA_MODEL")
+			if model == "" {
+				model = "llama3:latest"
+			}
+			commitMsg, err = ollama.GenerateCommitMessage(config, changes, url, model)	
 		default:
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 		}
