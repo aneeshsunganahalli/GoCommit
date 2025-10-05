@@ -11,6 +11,7 @@ import (
 	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
 	"github.com/dfanso/commit-msg/internal/grok"
+	"github.com/dfanso/commit-msg/internal/groq"
 	"github.com/dfanso/commit-msg/internal/ollama"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
@@ -39,6 +40,11 @@ func main() {
 		apiKey = os.Getenv("GROK_API_KEY")
 		if apiKey == "" {
 			log.Fatalf("GROK_API_KEY is not set")
+		}
+	case "groq":
+		apiKey = os.Getenv("GROQ_API_KEY")
+		if apiKey == "" {
+			log.Fatalf("GROQ_API_KEY is not set")
 		}
 	case "chatgpt":
 		apiKey = os.Getenv("OPENAI_API_KEY")
@@ -139,6 +145,8 @@ func main() {
 			model = "llama3:latest"
 		}
 		commitMsg, err = ollama.GenerateCommitMessage(config, changes, url, model)
+	case "groq":
+		commitMsg, err = groq.GenerateCommitMessage(config, changes, apiKey)
 	default:
 		commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
 	}
