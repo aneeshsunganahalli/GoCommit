@@ -48,6 +48,66 @@ func SetupLLM() error {
 }
 
 func UpdateLLM() error {
-	fmt.Println("Update LLM config")
+	
+	SavedModels, err := store.ListSavedModels()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	models := []string{}
+	options := []string{"Set Default", "Change API Key", "Delete"}
+
+	for _, p := range SavedModels.LLMProviders {
+		models = append(models, p.LLM)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select from saved models",
+		Items: models,
+	}
+
+	_,model,err := prompt.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	
+	prompt = promptui.Select{
+		Label: "Select Option",
+		Items: options,
+	}
+	opNo,_,err := prompt.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	apiKeyprompt := promptui.Prompt {
+		Label: "Enter API Key",
+	}
+
+
+	switch opNo {
+		case 0:
+			err := store.ChangeDefault(model)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%s set as default", model)
+		case 1:
+			apiKey, err := apiKeyprompt.Run()
+			if err !=  nil {
+				return err
+			}
+			store.UpdateAPIKey(model, apiKey)
+			fmt.Printf("%s API Key Updated", model)
+		case 2:
+			err := store.DeleteModel(model)
+			if err == nil {
+				fmt.Printf("%s model deleted", model)
+			}
+			
+				
+	}
+
 	return nil
 }

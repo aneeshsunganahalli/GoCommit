@@ -72,11 +72,6 @@ func Save(LLMConfig LLMProvider) error {
 
 	cfg.Default = LLMConfig.LLM 
 
-	file, err := os.OpenFile(configPath, os.O_CREATE| os.O_WRONLY| os.O_TRUNC, 0600)
-	if err != nil {
-		fmt.Println("error opening file")
-	}
-	defer file.Close()
 
 	data, err = json.MarshalIndent(cfg, "", " ")
 	if err != nil {
@@ -149,7 +144,6 @@ func getConfigPath() (string, error) {
 
 }
 
-
 func DefaultLLMKey() (*LLMProvider, error) {
 
 	var cfg Config
@@ -192,4 +186,177 @@ func DefaultLLMKey() (*LLMProvider, error) {
 		}
 	}
 	return nil, errors.New("not found default model in config")
+}
+
+
+func ListSavedModels() (*Config, error){
+	
+	var cfg Config
+
+	configPath, err := getConfigPath()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isConfigExists := checkConfig(configPath)
+	if !isConfigExists {
+		log.Fatal("config file not exists")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		fmt.Println("Error", err)
+		log.Fatal(err)
+	}
+
+	if len(data) > 0 {
+		err = json.Unmarshal(data, &cfg)
+		if err != nil {
+			fmt.Println("unmarshal error", err)
+			log.Fatal(err)
+		}
+	} else {
+		fmt.Println("Config file is empty, Please add atlead one LLM Key")
+		return nil, errors.New("config file is empty")
+	}
+
+
+	return &cfg, nil
+
+}
+
+
+func ChangeDefault(Model string) error {
+
+	var cfg Config
+
+	configPath, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	isConfigExists := checkConfig(configPath)
+	if !isConfigExists {
+		return errors.New("config file not exists")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	if len(data) > 0 {
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return err
+	}
+	}
+
+	cfg.Default = Model
+
+	data, err = json.MarshalIndent(cfg, "", " ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(configPath, data, 0600)
+}
+
+
+func DeleteModel(Model string) error {
+	
+	var cfg Config
+	var newCfg Config
+
+	configPath, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	isConfigExists := checkConfig(configPath)
+	if !isConfigExists {
+		return errors.New("config file not exists")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	if len(data) > 0 {
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return err
+	}
+	}
+
+
+	if Model == cfg.Default {
+		if len(cfg.LLMProviders) > 1 {
+			fmt.Println("Please set other model as default, Cant delete default model")
+			return nil
+		} else {
+			return os.WriteFile(configPath, []byte("{}"), 0600)
+		}
+	} else {
+
+		for _,p := range cfg.LLMProviders {
+			
+			if p.LLM != Model {
+				newCfg.LLMProviders = append(newCfg.LLMProviders, p)
+			}
+		}
+
+			newCfg.Default = cfg.Default
+
+			data, err = json.MarshalIndent(newCfg, "", " ")
+			if err != nil {
+			return err
+			}
+			return os.WriteFile(configPath, data, 0600)		
+
+	}
+}
+
+
+func UpdateAPIKey(Model, APIKey string) error {
+
+	var cfg Config
+
+
+	configPath, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	isConfigExists := checkConfig(configPath)
+	if !isConfigExists {
+		return errors.New("config file not exists")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+
+	if len(data) > 0 {
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return err
+	}
+	}
+
+	for i, p := range cfg.LLMProviders {
+		if p.LLM == Model {
+			cfg.LLMProviders[i].APIKey = APIKey
+		}
+	}
+
+	data, err = json.MarshalIndent(cfg, "", " ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(configPath, data, 0600)
+
 }
