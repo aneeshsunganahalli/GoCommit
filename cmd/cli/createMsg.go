@@ -121,10 +121,8 @@ func CreateCommitMsg () {
 		case "Claude":
 			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
 		case "Ollama":
-			model := os.Getenv("OLLAMA_MODEL")
-			if model == "" {
-				model = "llama3:latest"
-			}
+			model := "llama3:latest"
+			
 			commitMsg, err = ollama.GenerateCommitMessage(config, changes, apiKey, model)
 		default:
 			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
