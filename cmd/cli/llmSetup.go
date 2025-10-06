@@ -80,7 +80,7 @@ func UpdateLLM() error {
 
 	models := []string{}
 	options1 := []string{"Set Default", "Change API Key", "Delete"}
-	options2 := []string{"Set Default", "Change URL", "Delete"}
+	options2 := []string{"Set Default", "Change URL", "Delete"} //different option for local model
 
 	for _, p := range SavedModels.LLMProviders {
 		models = append(models, p.LLM)
