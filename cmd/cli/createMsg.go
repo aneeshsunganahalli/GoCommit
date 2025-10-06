@@ -11,6 +11,7 @@ import (
 	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
 	"github.com/dfanso/commit-msg/internal/grok"
+	"github.com/dfanso/commit-msg/internal/groq"
 	"github.com/dfanso/commit-msg/internal/ollama"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
@@ -120,6 +121,8 @@ func CreateCommitMsg () {
 		
 		case "Claude":
 			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
+		case "Groq":
+			commitMsg, err = groq.GenerateCommitMessage(config, changes, apiKey)
 		case "Ollama":
 			model := "llama3:latest"
 			
@@ -138,6 +141,8 @@ func CreateCommitMsg () {
 				pterm.Error.Printf("OpenAI API error. Check your OPENAI_API_KEY environment variable or run: commit llm setup\n")
 			case "Claude":
 				pterm.Error.Printf("Claude API error. Check your CLAUDE_API_KEY environment variable or run: commit llm setup\n")
+			case "Groq":
+				pterm.Error.Printf("Groq API error. Check your GROQ_API_KEY environment variable or run: commit llm setup\n")
 			case "Grok":
 				pterm.Error.Printf("Grok API error. Check your GROK_API_KEY environment variable or run: commit llm setup\n")
 			default:
