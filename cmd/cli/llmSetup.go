@@ -11,7 +11,7 @@ import (
 
 func SetupLLM() error {
 
-	providers := []string{"OpenAI", "Claude", "Gemini", "Grok", "Ollama"}
+	providers := []string{"OpenAI", "Claude", "Gemini", "Grok", "Groq", "Ollama"}
 	prompt := promptui.Select{
 		Label: "Select LLM",
 		Items: providers,
