@@ -25,19 +25,30 @@ func SetupLLM() error {
 	var apiKey string
 	
 	// Skip API key prompt for Ollama (local LLM)
-	if model != "Ollama" {
-		apiKeyPrompt := promptui.Prompt{
+	apiKeyPrompt := promptui.Prompt{
 			Label: "Enter API Key",
 			Mask: '*',
 		}
+	
+	
+		switch model {
+		case "Ollama":
+			urlPrompt := promptui.Prompt{
+			Label: "Enter URL",
+			}
+			apiKey, err = urlPrompt.Run()
+			if err != nil {
+			return fmt.Errorf("failed to read Url: %w", err)
+			}
 
-		apiKey, err = apiKeyPrompt.Run()
-		if err != nil {
+		default:
+			apiKey, err = apiKeyPrompt.Run()
+			if err != nil {
 			return fmt.Errorf("failed to read API Key: %w", err)
 		}
-	} else {
-		apiKey = "" // No API key needed for Ollama
-	}
+
+		}
+
 
 	LLMConfig := store.LLMProvider{
 		LLM:    model,
@@ -68,7 +79,8 @@ func UpdateLLM() error {
 	}
 
 	models := []string{}
-	options := []string{"Set Default", "Change API Key", "Delete"}
+	options1 := []string{"Set Default", "Change API Key", "Delete"}
+	options2 := []string{"Set Default", "Change URL", "Delete"} //different option for local model
 
 	for _, p := range SavedModels.LLMProviders {
 		models = append(models, p.LLM)
@@ -84,19 +96,33 @@ func UpdateLLM() error {
 		return err
 	}
 
-	
-	prompt = promptui.Select{
+		prompt = promptui.Select{
 		Label: "Select Option",
-		Items: options,
-	}
+		Items: options1,
+		}
+
+		apiKeyPrompt := promptui.Prompt {
+		Label: "Enter API Key",
+		}
+
+	
+		if model == "Ollama" {
+			prompt = promptui.Select{
+			Label: "Select Option",
+				Items: options2,
+			}
+
+			apiKeyPrompt = promptui.Prompt {
+				Label: "Enter URL",
+			}
+		}
+
+
 	opNo,_,err := prompt.Run()
 	if err != nil {
 		return err
 	}
 
-	apiKeyprompt := promptui.Prompt {
-		Label: "Enter API Key",
-	}
 
 
 	switch opNo {
@@ -107,7 +133,7 @@ func UpdateLLM() error {
 			}
 			fmt.Printf("%s set as default", model)
 		case 1:
-			apiKey, err := apiKeyprompt.Run()
+			apiKey, err := apiKeyPrompt.Run()
 			if err !=  nil {
 				return err
 			}
@@ -115,7 +141,9 @@ func UpdateLLM() error {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("%s API Key Updated", model)
+			event := "API Key"
+			if model == "Ollama"{event = "URL"} 
+			fmt.Printf("%s %s Updated", model,event)
 		case 2:
 			err := store.DeleteModel(model)
 			if err != nil {
