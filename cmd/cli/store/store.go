@@ -165,7 +165,6 @@ func DefaultLLMKey() (*LLMProvider, error) {
 		return nil, err
 	}
 
-	fmt.Println(len(data))
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
