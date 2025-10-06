@@ -13,7 +13,7 @@ Below is a sample execution of `commit-msg`:
 
 ![Commit-msg GIF](assets/commit.gif)
 
-Before running the application, ensure you have set the system environment variables. and add commit.exe to path variables (same for linux macOS)
+## Before running the application, set LLM and API Key using "commit llm setup"
 
 ## 🎃 Hacktoberfest 2025
 
@@ -39,18 +39,6 @@ Looking to contribute? Check out:
 
 You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** (local) as the LLM to generate commit messages:
 
-### Environment Variables
-
-| Variable | Values | Description |
-| :--- | :--- | :--- |
-| `COMMIT_LLM` | `gemini`, `grok`, `claude`, `chatgpt`, or `ollama` | Choose your LLM provider |
-| `GEMINI_API_KEY` | Your API key | Required if using Gemini |
-| `GROK_API_KEY` | Your API key | Required if using Grok |
-| `CLAUDE_API_KEY` | Your API key | Required if using Claude |
-| `OPENAI_API_KEY` | Your API key | Required if using ChatGPT |
-| `OLLAMA_URL` | URL (optional) | Ollama server URL (default: http://localhost:11434/api/generate) |
-| `OLLAMA_MODEL` | Model name (optional) | Ollama model to use (default: llama3) |
-
 ---
 
 ## 📦 Installation
@@ -74,22 +62,6 @@ You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** 
    echo 'export PATH=$PATH:/path/to/commit-msg' >> ~/.bashrc  # or ~/.zshrc
    ```
 
-4. Set up environment variables:
-
-   **Windows:**
-
-   ```cmd
-   setx COMMIT_LLM "gemini"
-   setx GEMINI_API_KEY "your-api-key-here"
-   ```
-
-   **Linux/macOS:**
-
-   ```bash
-   export COMMIT_LLM=gemini
-   export GEMINI_API_KEY=your-api-key-here
-   # Add to ~/.bashrc or ~/.zshrc to persist
-   ```
 
 ### Option 2: Build from Source
 
@@ -128,7 +100,24 @@ Or if running from source:
 go run cmd/commit-msg/main.go .
 ```
 
+### Setup LLM and API Key
+
+```bash
+  commit llm setup
+```
+<img width="551" height="184" alt="Screenshot 2025-10-05 172731" src="https://github.com/user-attachments/assets/d71c38ad-4737-4ca8-bde3-fbff1066e62b" />
+<img width="536" height="235" alt="Screenshot 2025-10-05 172748" src="https://github.com/user-attachments/assets/b6c5c0f0-bf6b-4ae7-966a-4cc16419c294" />
+
+### Update LLM
+
+```bash
+  commit llm update
+```
+<img width="477" height="179" alt="Screenshot 2025-10-05 172814" src="https://github.com/user-attachments/assets/a8b7686f-106b-4408-8c73-254cdd7dc0b5" />
+<img width="551" height="176" alt="Screenshot 2025-10-05 172823" src="https://github.com/user-attachments/assets/b559c20c-4e18-4e46-97b3-0d26c278d9e0" />
+
 ### Example Workflow
+
 
 ```bash
 # Make changes to your code
@@ -161,38 +150,65 @@ commit .
 
 ## 🔧 Configuration
 
-### Getting API Keys
+### Set LLM and API Keys
+
+```bash
+  commit llm setup
+```
+
+### Update LLM
+
+```bash
+  commit llm update
+```
+
+**Set LLM as default**
+```bash
+Select: Set Default
+```
+
+**Change API Key**
+```bash
+Select: Change API Key
+```
+
+**Delete LLM**
+```bash
+Select: Delete
+```
+---
+
+## Getting API Keys
 
 **Google Gemini:**
 
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create a new API key
-3. Set the `GEMINI_API_KEY` environment variable
+
 
 **Grok (X.AI):**
 
 1. Visit [X.AI Console](https://console.x.ai/)
 2. Generate an API key
-3. Set the `GROK_API_KEY` environment variable
+
 
 **Groq:**
 
 1. Sign up at [Groq Cloud](https://console.groq.com/)
 2. Create an API key
-3. Set the `GROQ_API_KEY` environment variable
-4. _(Optional)_ Set `GROQ_MODEL` or `GROQ_API_URL` to override defaults
+
 
 **Claude (Anthropic):**
 
 1.  Visit the [Anthropic Console](https://console.anthropic.com/)
 2.  Create a new API key
-3.  Set the `CLAUDE_API_KEY` environment variable
+
 
 **OpenAI (ChatGPT):**
 
 1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
 2. Create a new API key
-3. Set the `OPENAI_API_KEY` environment variable
+
 
 **Ollama (Local LLM):**
 
