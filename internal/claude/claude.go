@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	httpClient "github.com/dfanso/commit-msg/internal/http"
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
@@ -58,7 +59,7 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	req.Header.Set("x-api-key", apiKey)
 	req.Header.Set("anthropic-version", "2023-06-01")
 
-	client := &http.Client{}
+	client := httpClient.GetClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err

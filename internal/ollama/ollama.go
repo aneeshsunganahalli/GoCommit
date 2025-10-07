@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 
+	httpClient "github.com/dfanso/commit-msg/internal/http"
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
@@ -46,7 +47,13 @@ func GenerateCommitMessage(_ *types.Config, changes string, url string, model st
 		return "", fmt.Errorf("failed to marshal request: %v", err)
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.GetOllamaClient().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request to Ollama: %v", err)
 	}
