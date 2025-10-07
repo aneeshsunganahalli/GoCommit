@@ -10,17 +10,20 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// ClaudeRequest describes the payload sent to Anthropic's Claude messages API.
 type ClaudeRequest struct {
 	Model     string    `json:"model"`
 	Messages  []Message `json:"messages"`
 	MaxTokens int       `json:"max_tokens"`
 }
 
+// Message represents a single role/content pair exchanged with Claude.
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
+// ClaudeResponse captures the subset of fields used from Anthropic responses.
 type ClaudeResponse struct {
 	ID      string `json:"id"`
 	Type    string `json:"type"`
@@ -30,6 +33,7 @@ type ClaudeResponse struct {
 	} `json:"content"`
 }
 
+// GenerateCommitMessage produces a commit summary using Anthropic's Claude API.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 
 	prompt := types.BuildCommitPrompt(changes, opts)

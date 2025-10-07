@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// CommitPrompt is the base instruction template sent to LLM providers before
+// appending repository changes and optional style guidance.
 var CommitPrompt = `I need a concise git commit message based on the following changes from my Git repository.
 Please generate a commit message that:
 1. Starts with a verb in the present tense (e.g., "Add", "Fix", "Update", "Feat", "Refactor", etc.)

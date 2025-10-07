@@ -10,6 +10,8 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// GenerateCommitMessage asks Google Gemini to author a commit message for the
+// supplied repository changes and optional style instructions.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	// Prepare request to Gemini API
 	prompt := types.BuildCommitPrompt(changes, opts)

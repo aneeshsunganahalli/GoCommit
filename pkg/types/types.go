@@ -19,6 +19,8 @@ func (p LLMProvider) IsValid() bool {
 	switch p {
 	case ProviderOpenAI, ProviderClaude, ProviderGemini, ProviderGrok, ProviderGroq, ProviderOllama:
 		return true
+	// LLMProvider identifies the large language model backend used to author
+	// commit messages.
 	default:
 		return false
 	}
@@ -30,10 +32,13 @@ func GetSupportedProviders() []LLMProvider {
 		ProviderClaude,
 		ProviderGemini,
 		ProviderGrok,
+		// String returns the string form of the provider identifier.
 		ProviderGroq,
 		ProviderOllama,
 	}
 }
+
+// IsValid reports whether the provider is part of the supported set.
 
 func GetSupportedProviderStrings() []string {
 	providers := GetSupportedProviders()
@@ -43,6 +48,8 @@ func GetSupportedProviderStrings() []string {
 	}
 	return strings
 }
+
+// GetSupportedProviders returns all available provider enums.
 
 func ParseLLMProvider(s string) (LLMProvider, bool) {
 	provider := LLMProvider(s)
@@ -55,6 +62,8 @@ type Config struct {
 	Repos   map[string]RepoConfig `json:"repos"`
 }
 
+// GetSupportedProviderStrings returns the human-friendly names for providers.
+
 // Repository configuration
 type RepoConfig struct {
 	Path    string `json:"path"`
@@ -63,6 +72,7 @@ type RepoConfig struct {
 
 // Grok/X.AI API request structure
 type GrokRequest struct {
+	// ParseLLMProvider converts a string into an LLMProvider enum when supported.
 	Messages    []Message `json:"messages"`
 	Model       string    `json:"model"`
 	Stream      bool      `json:"stream"`

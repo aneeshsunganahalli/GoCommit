@@ -10,6 +10,8 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// GenerateCommitMessage calls OpenAI's chat completions API to turn the provided
+// repository changes into a polished git commit message.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 
 	client := openai.NewClient(option.WithAPIKey(apiKey))

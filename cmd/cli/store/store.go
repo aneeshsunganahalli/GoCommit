@@ -1,3 +1,4 @@
+// Package store persists user-selected LLM providers and credentials.
 package store
 
 import (
@@ -11,16 +12,19 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// LLMProvider represents a single stored LLM provider and its credential.
 type LLMProvider struct {
 	LLM    types.LLMProvider `json:"model"`
 	APIKey string            `json:"api_key"`
 }
 
+// Config describes the on-disk structure for all saved LLM providers.
 type Config struct {
 	Default      types.LLMProvider `json:"default"`
 	LLMProviders []LLMProvider     `json:"models"`
 }
 
+// Save persists or updates an LLM provider entry, marking it as the default.
 func Save(LLMConfig LLMProvider) error {
 
 	cfg := Config{
@@ -139,6 +143,7 @@ func getConfigPath() (string, error) {
 
 }
 
+// DefaultLLMKey returns the currently selected default LLM provider, if any.
 func DefaultLLMKey() (*LLMProvider, error) {
 
 	var cfg Config
@@ -179,6 +184,7 @@ func DefaultLLMKey() (*LLMProvider, error) {
 	return nil, errors.New("not found default model in config")
 }
 
+// ListSavedModels loads all persisted LLM provider configurations.
 func ListSavedModels() (*Config, error) {
 
 	var cfg Config
@@ -211,6 +217,7 @@ func ListSavedModels() (*Config, error) {
 
 }
 
+// ChangeDefault updates the default LLM provider selection in the config.
 func ChangeDefault(Model types.LLMProvider) error {
 
 	var cfg Config
@@ -247,6 +254,7 @@ func ChangeDefault(Model types.LLMProvider) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
+// DeleteModel removes the specified provider from the saved configuration.
 func DeleteModel(Model types.LLMProvider) error {
 
 	var cfg Config
@@ -300,6 +308,7 @@ func DeleteModel(Model types.LLMProvider) error {
 	}
 }
 
+// UpdateAPIKey rotates the credential for an existing provider entry.
 func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 
 	var cfg Config

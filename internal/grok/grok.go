@@ -12,6 +12,8 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// GenerateCommitMessage calls X.AI's Grok API to create a commit message from
+// the provided Git diff and generation options.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	// Prepare request to X.AI (Grok) API
 	prompt := types.BuildCommitPrompt(changes, opts)

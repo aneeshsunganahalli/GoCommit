@@ -24,6 +24,8 @@ import (
 	"github.com/pterm/pterm"
 )
 
+// CreateCommitMsg launches the interactive flow for reviewing, regenerating,
+// editing, and accepting AI-generated commit messages in the current repo.
 func CreateCommitMsg() {
 	// Validate COMMIT_LLM and required API keys
 	useLLM, err := store.DefaultLLMKey()
