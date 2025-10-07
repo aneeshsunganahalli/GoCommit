@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
 
+	httpClient "github.com/dfanso/commit-msg/internal/http"
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
@@ -38,8 +38,7 @@ const defaultModel = "llama-3.3-70b-versatile"
 
 var (
 	// allow overrides in tests
-	baseURL    = "https://api.groq.com/openai/v1/chat/completions"
-	httpClient = &http.Client{Timeout: 30 * time.Second}
+	baseURL = "https://api.groq.com/openai/v1/chat/completions"
 )
 
 // GenerateCommitMessage calls Groq's OpenAI-compatible chat completions API.
@@ -83,7 +82,7 @@ func GenerateCommitMessage(_ *types.Config, changes string, apiKey string, opts 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	resp, err := httpClient.Do(req)
+	resp, err := httpClient.GetClient().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to call Groq API: %w", err)
 	}

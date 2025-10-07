@@ -2,40 +2,14 @@ package grok
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
-	"time"
 
+	httpClient "github.com/dfanso/commit-msg/internal/http"
 	"github.com/dfanso/commit-msg/pkg/types"
 )
-
-var (
-	grokClientOnce sync.Once
-	grokClient     *http.Client
-)
-
-func getHTTPClient() *http.Client {
-	grokClientOnce.Do(func() {
-		transport := &http.Transport{
-			TLSHandshakeTimeout: 10 * time.Second,
-			MaxIdleConns:        10,
-			IdleConnTimeout:     30 * time.Second,
-			DisableCompression:  true,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: false,
-			},
-		}
-		grokClient = &http.Client{
-			Timeout:   30 * time.Second,
-			Transport: transport,
-		}
-	})
-	return grokClient
-}
 
 // GenerateCommitMessage calls X.AI's Grok API to create a commit message from
 // the provided Git diff and generation options.
@@ -71,7 +45,7 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
-	client := getHTTPClient()
+	client := httpClient.GetClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
