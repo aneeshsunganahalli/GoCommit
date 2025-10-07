@@ -1,5 +1,7 @@
 package types
 
+// LLMProvider identifies the large language model backend used to author
+// commit messages.
 type LLMProvider string
 
 const (
@@ -11,35 +13,34 @@ const (
 	ProviderOllama LLMProvider = "Ollama"
 )
 
+// String returns the provider identifier as a plain string.
 func (p LLMProvider) String() string {
 	return string(p)
 }
 
+// IsValid reports whether the provider is part of the supported set.
 func (p LLMProvider) IsValid() bool {
 	switch p {
 	case ProviderOpenAI, ProviderClaude, ProviderGemini, ProviderGrok, ProviderGroq, ProviderOllama:
 		return true
-	// LLMProvider identifies the large language model backend used to author
-	// commit messages.
 	default:
 		return false
 	}
 }
 
+// GetSupportedProviders returns all available provider enums.
 func GetSupportedProviders() []LLMProvider {
 	return []LLMProvider{
 		ProviderOpenAI,
 		ProviderClaude,
 		ProviderGemini,
 		ProviderGrok,
-		// String returns the string form of the provider identifier.
 		ProviderGroq,
 		ProviderOllama,
 	}
 }
 
-// IsValid reports whether the provider is part of the supported set.
-
+// GetSupportedProviderStrings returns the human-friendly names for providers.
 func GetSupportedProviderStrings() []string {
 	providers := GetSupportedProviders()
 	strings := make([]string, len(providers))
@@ -49,42 +50,39 @@ func GetSupportedProviderStrings() []string {
 	return strings
 }
 
-// GetSupportedProviders returns all available provider enums.
-
+// ParseLLMProvider converts a string into an LLMProvider enum when supported.
 func ParseLLMProvider(s string) (LLMProvider, bool) {
 	provider := LLMProvider(s)
 	return provider, provider.IsValid()
 }
 
-// Configuration structure
+// Config stores CLI-level configuration including named repositories.
 type Config struct {
 	GrokAPI string                `json:"grok_api"`
 	Repos   map[string]RepoConfig `json:"repos"`
 }
 
-// GetSupportedProviderStrings returns the human-friendly names for providers.
-
-// Repository configuration
+// RepoConfig tracks metadata for a configured Git repository.
 type RepoConfig struct {
 	Path    string `json:"path"`
 	LastRun string `json:"last_run"`
 }
 
-// Grok/X.AI API request structure
+// GrokRequest represents a chat completion request sent to X.AI's API.
 type GrokRequest struct {
-	// ParseLLMProvider converts a string into an LLMProvider enum when supported.
 	Messages    []Message `json:"messages"`
 	Model       string    `json:"model"`
 	Stream      bool      `json:"stream"`
 	Temperature float64   `json:"temperature"`
 }
 
+// Message captures the role/content pairs exchanged with Grok.
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// Grok/X.AI API response structure
+// GrokResponse contains the relevant fields parsed from X.AI responses.
 type GrokResponse struct {
 	Message Message   `json:"message,omitempty"`
 	Choices []Choice  `json:"choices,omitempty"`
@@ -95,12 +93,14 @@ type GrokResponse struct {
 	Usage   UsageInfo `json:"usage,omitempty"`
 }
 
+// Choice details a single response option returned by Grok.
 type Choice struct {
 	Message      Message `json:"message"`
 	Index        int     `json:"index"`
 	FinishReason string  `json:"finish_reason"`
 }
 
+// UsageInfo reports token usage statistics from Grok responses.
 type UsageInfo struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`

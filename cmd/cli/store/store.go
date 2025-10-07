@@ -244,6 +244,17 @@ func ChangeDefault(Model types.LLMProvider) error {
 		}
 	}
 
+	found := false
+	for _, p := range cfg.LLMProviders {
+		if p.LLM == Model {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("cannot set default to %s: no saved entry", Model.String())
+	}
+
 	cfg.Default = Model
 
 	data, err = json.MarshalIndent(cfg, "", " ")
@@ -335,10 +346,16 @@ func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 		}
 	}
 
+	updated := false
 	for i, p := range cfg.LLMProviders {
 		if p.LLM == Model {
 			cfg.LLMProviders[i].APIKey = APIKey
+			updated = true
 		}
+	}
+
+	if !updated {
+		return fmt.Errorf("no saved entry for %s to update", Model.String())
 	}
 
 	data, err = json.MarshalIndent(cfg, "", " ")

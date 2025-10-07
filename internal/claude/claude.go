@@ -12,15 +12,9 @@ import (
 
 // ClaudeRequest describes the payload sent to Anthropic's Claude messages API.
 type ClaudeRequest struct {
-	Model     string    `json:"model"`
-	Messages  []Message `json:"messages"`
-	MaxTokens int       `json:"max_tokens"`
-}
-
-// Message represents a single role/content pair exchanged with Claude.
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Model     string          `json:"model"`
+	Messages  []types.Message `json:"messages"`
+	MaxTokens int             `json:"max_tokens"`
 }
 
 // ClaudeResponse captures the subset of fields used from Anthropic responses.
@@ -41,7 +35,7 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	reqBody := ClaudeRequest{
 		Model:     "claude-3-5-sonnet-20241022",
 		MaxTokens: 200,
-		Messages: []Message{
+		Messages: []types.Message{
 			{
 				Role:    "user",
 				Content: prompt,
