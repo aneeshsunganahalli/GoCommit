@@ -247,7 +247,7 @@ func generateMessage(provider types.LLMProvider, config *types.Config, changes s
 		}
 		model := os.Getenv("OLLAMA_MODEL")
 		if model == "" {
-			model = "llama3:latest"
+			model = "llama3.1"
 		}
 		return ollama.GenerateCommitMessage(config, changes, url, model, opts)
 	default:

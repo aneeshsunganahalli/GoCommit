@@ -174,19 +174,19 @@ This makes it easy to tweak the tone, iterate on suggestions, or fine-tune the f
   commit llm update
 ```
 
-**Set LLM as default**
+### Set LLM as default
 
 ```bash
 Select: Set Default
 ```
 
-**Change API Key**
+### Change API Key
 
 ```bash
 Select: Change API Key
 ```
 
-**Delete LLM**
+### Delete LLM
 
 ```bash
 Select: Delete
