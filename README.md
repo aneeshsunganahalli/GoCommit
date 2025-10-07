@@ -33,9 +33,9 @@ Looking to contribute? Check out:
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 🎛️ **Interactive Review Flow** - Accept, regenerate with new styles, or open the message in your editor before committing  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
-� **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
-�🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
-⚡ **Fast** - Quick generation of commit messages
+🔒 **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
+🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
+⚡ **Fast** - Quick generation of commit messages//img.shields.io/badge/Hacktoberfest-2025-orange.
 
 ## Supported LLM Providers
 
