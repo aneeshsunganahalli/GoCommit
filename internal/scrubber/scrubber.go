@@ -31,7 +31,7 @@ var (
 			Pattern: regexp.MustCompile(`(?i)(authorization\s*[=:]\s*["\']?)([a-zA-Z0-9_\-\.]{20,})["\']?`),
 			Redact:  "${1}[REDACTED_AUTH_TOKEN]\"",
 		},
-		
+
 		// AWS Credentials
 		{
 			Name:    "AWS Access Key",
@@ -43,7 +43,7 @@ var (
 			Pattern: regexp.MustCompile(`(?i)(aws[_-]?secret[_-]?access[_-]?key|AWS_SECRET_ACCESS_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9/+=]{40})["\']?`),
 			Redact:  "${1}=\"[REDACTED_AWS_SECRET]\"",
 		},
-		
+
 		// Database Credentials
 		{
 			Name:    "Database URL with Password",
@@ -55,7 +55,7 @@ var (
 			Pattern: regexp.MustCompile(`(?i)(db[_-]?password|database[_-]?password|DB_PASSWORD)\s*[=:]\s*["\']?([^\s"']+)["\']?`),
 			Redact:  "${1}=\"[REDACTED_DB_PASSWORD]\"",
 		},
-		
+
 		// OAuth and Social Media
 		{
 			Name:    "GitHub Token",
@@ -87,49 +87,49 @@ var (
 			Pattern: regexp.MustCompile(`(?i)(slack[_-]?token|SLACK_TOKEN)\s*[=:]\s*["\']?(xox[baprs]-[a-zA-Z0-9\-]{10,})["\']?`),
 			Redact:  "${1}=\"[REDACTED_SLACK_TOKEN]\"",
 		},
-		
+
 		// Private Keys
 		{
 			Name:    "Private Key",
 			Pattern: regexp.MustCompile(`(?s)(-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----).*?(-----END (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----)`),
 			Redact:  "${1}\n[REDACTED_PRIVATE_KEY]\n${2}",
 		},
-		
+
 		// JWT Tokens
 		{
 			Name:    "JWT Token",
 			Pattern: regexp.MustCompile(`(?i)(jwt|token)\s*[=:]\s*["\']?(eyJ[a-zA-Z0-9_\-]*\.eyJ[a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]+)["\']?`),
 			Redact:  "${1}=\"[REDACTED_JWT_TOKEN]\"",
 		},
-		
+
 		// Generic Passwords
 		{
 			Name:    "Password",
 			Pattern: regexp.MustCompile(`(?i)(password|passwd|pwd)\s*[=:]\s*["\']([^\s"']{8,})["\']`),
 			Redact:  "${1}=\"[REDACTED_PASSWORD]\"",
 		},
-		
+
 		// Generic Secrets
 		{
 			Name:    "Secret",
 			Pattern: regexp.MustCompile(`(?i)(secret|SECRET)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{20,})["\']?`),
 			Redact:  "${1}=\"[REDACTED_SECRET]\"",
 		},
-		
+
 		// Environment Variable Assignments (catch-all for .env patterns)
 		{
 			Name:    "Generic Token",
 			Pattern: regexp.MustCompile(`(?i)(access[_-]?token|auth[_-]?token|client[_-]?secret|private[_-]?key)\s*[=:]\s*["\']?([a-zA-Z0-9_\-\.]{20,})["\']?`),
 			Redact:  "${1}=\"[REDACTED_TOKEN]\"",
 		},
-		
+
 		// Credit Card Numbers (basic pattern)
 		{
 			Name:    "Credit Card",
 			Pattern: regexp.MustCompile(`\b([0-9]{4}[\s\-]?){3}[0-9]{4}\b`),
 			Redact:  "[REDACTED_CREDIT_CARD]",
 		},
-		
+
 		// Email in credentials context
 		{
 			Name:    "Email in Credentials",
@@ -142,12 +142,12 @@ var (
 // ScrubDiff removes sensitive information from git diff output
 func ScrubDiff(diff string) string {
 	scrubbed := diff
-	
+
 	// Apply each pattern
 	for _, pattern := range sensitivePatterns {
 		scrubbed = pattern.Pattern.ReplaceAllString(scrubbed, pattern.Redact)
 	}
-	
+
 	return scrubbed
 }
 
@@ -156,7 +156,7 @@ func ScrubDiff(diff string) string {
 func ScrubLines(content string) string {
 	lines := strings.Split(content, "\n")
 	scrubbedLines := make([]string, len(lines))
-	
+
 	for i, line := range lines {
 		scrubbedLine := line
 		for _, pattern := range sensitivePatterns {
@@ -164,7 +164,7 @@ func ScrubLines(content string) string {
 		}
 		scrubbedLines[i] = scrubbedLine
 	}
-	
+
 	return strings.Join(scrubbedLines, "\n")
 }
 
@@ -193,16 +193,16 @@ func GetDetectedPatterns(content string) []string {
 func ScrubEnvFile(content string) string {
 	lines := strings.Split(content, "\n")
 	scrubbedLines := make([]string, len(lines))
-	
+
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Skip comments and empty lines
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			scrubbedLines[i] = line
 			continue
 		}
-		
+
 		// Check if line contains an assignment
 		if strings.Contains(line, "=") {
 			parts := strings.SplitN(line, "=", 2)
@@ -222,10 +222,10 @@ func ScrubEnvFile(content string) string {
 				}
 			}
 		}
-		
+
 		// Apply normal scrubbing
 		scrubbedLines[i] = ScrubDiff(line)
 	}
-	
+
 	return strings.Join(scrubbedLines, "\n")
 }

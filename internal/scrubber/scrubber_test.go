@@ -117,7 +117,7 @@ func TestScrubDatabaseCredentials(t *testing.T) {
 func TestScrubJWTTokens(t *testing.T) {
 	input := `token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"`
 	result := ScrubDiff(input)
-	
+
 	if !strings.Contains(result, "[REDACTED_JWT_TOKEN]") {
 		t.Errorf("ScrubDiff() failed to redact JWT token.\nInput: %s\nOutput: %s", input, result)
 	}
@@ -128,9 +128,9 @@ func TestScrubPrivateKeys(t *testing.T) {
 MIIEpAIBAAKCAQEA1234567890abcdef
 ghijklmnopqrstuvwxyz
 -----END RSA PRIVATE KEY-----`
-	
+
 	result := ScrubDiff(input)
-	
+
 	if strings.Contains(result, "MIIEpAIBAAKCAQEA") || strings.Contains(result, "ghijklmnopqrstuvwxyz") {
 		t.Errorf("ScrubDiff() failed to redact private key.\nOutput: %s", result)
 	}
@@ -142,7 +142,7 @@ ghijklmnopqrstuvwxyz
 func TestScrubBearerToken(t *testing.T) {
 	input := `Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijk`
 	result := ScrubDiff(input)
-	
+
 	if !strings.Contains(result, "[REDACTED") {
 		t.Errorf("ScrubDiff() failed to redact bearer token.\nInput: %s\nOutput: %s", input, result)
 	}
@@ -176,7 +176,7 @@ func TestScrubGitHubToken(t *testing.T) {
 func TestScrubSlackToken(t *testing.T) {
 	input := `SLACK_TOKEN=xoxb-1234567890-1234567890-abcdefghijk`
 	result := ScrubDiff(input)
-	
+
 	if !strings.Contains(result, "[REDACTED_SLACK_TOKEN]") {
 		t.Errorf("ScrubDiff() failed to redact Slack token.\nInput: %s\nOutput: %s", input, result)
 	}
@@ -221,19 +221,19 @@ PORT=3000
 OPENAI_API_KEY=sk-proj-abcdefghijk`
 
 	result := ScrubEnvFile(input)
-	
+
 	// Check that sensitive values are redacted
 	if strings.Contains(result, "sk-1234567890") ||
 		strings.Contains(result, "mysecrettoken123") ||
 		strings.Contains(result, "sk-proj-abcdefghijk") {
 		t.Errorf("ScrubEnvFile() failed to redact sensitive values.\nOutput: %s", result)
 	}
-	
+
 	// Check that non-sensitive values are preserved
 	if !strings.Contains(result, "DEBUG=true") || !strings.Contains(result, "PORT=3000") {
 		t.Errorf("ScrubEnvFile() incorrectly redacted non-sensitive values.\nOutput: %s", result)
 	}
-	
+
 	// Check that comments are preserved
 	if !strings.Contains(result, "# Environment variables") {
 		t.Errorf("ScrubEnvFile() removed comments.\nOutput: %s", result)
@@ -284,18 +284,18 @@ func TestGetDetectedPatterns(t *testing.T) {
 	password="mySecretPass123"
 	GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqrstuvw
 	`
-	
+
 	patterns := GetDetectedPatterns(input)
-	
+
 	if len(patterns) == 0 {
 		t.Error("GetDetectedPatterns() returned no patterns for input with sensitive data")
 	}
-	
+
 	// Should detect at least these patterns
 	hasOpenAI := false
 	hasPassword := false
 	hasGitHub := false
-	
+
 	for _, p := range patterns {
 		if strings.Contains(p, "OpenAI") {
 			hasOpenAI = true
@@ -307,7 +307,7 @@ func TestGetDetectedPatterns(t *testing.T) {
 			hasGitHub = true
 		}
 	}
-	
+
 	if !hasOpenAI {
 		t.Error("GetDetectedPatterns() did not detect OpenAI API key")
 	}
@@ -344,7 +344,7 @@ index abcdef..123456 100644
  };`
 
 	result := ScrubDiff(input)
-	
+
 	// Check that sensitive values are removed
 	if strings.Contains(result, "secretpass") {
 		t.Error("Failed to scrub database password from diff")
@@ -358,7 +358,7 @@ index abcdef..123456 100644
 	if strings.Contains(result, "sk-1234567890abcdefghijklmnop") {
 		t.Error("Failed to scrub API key from config file")
 	}
-	
+
 	// Check that non-sensitive values are preserved
 	if !strings.Contains(result, "PORT=3000") {
 		t.Error("Incorrectly removed non-sensitive PORT value")
