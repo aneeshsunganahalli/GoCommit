@@ -115,6 +115,7 @@ func CreateCommitMsg() {
 
 	currentMessage := strings.TrimSpace(commitMsg)
 	currentStyleLabel := stylePresets[0].Label
+	var currentStyleOpts *types.GenerationOptions
 	accepted := false
 	finalMessage := ""
 
@@ -144,7 +145,7 @@ interactionLoop:
 			accepted = true
 			break interactionLoop
 		case actionRegenerateOption:
-			opts, styleLabel, err := promptStyleSelection(currentStyleLabel)
+			opts, styleLabel, err := promptStyleSelection(currentStyleLabel, currentStyleOpts)
 			if errors.Is(err, errSelectionCancelled) {
 				continue
 			}
@@ -155,8 +156,9 @@ interactionLoop:
 			if styleLabel != "" {
 				currentStyleLabel = styleLabel
 			}
+			currentStyleOpts = opts
 			nextAttempt := attempt + 1
-			generationOpts := withAttempt(opts, nextAttempt)
+			generationOpts := withAttempt(currentStyleOpts, nextAttempt)
 			spinner, err := pterm.DefaultSpinner.
 				WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
 				Start(fmt.Sprintf("Regenerating commit message (%s)...", currentStyleLabel))
@@ -260,10 +262,17 @@ func promptActionSelection() (string, error) {
 		Show()
 }
 
-func promptStyleSelection(currentLabel string) (*types.GenerationOptions, string, error) {
-	options := make([]string, 0, len(stylePresets)+2)
+func promptStyleSelection(currentLabel string, currentOpts *types.GenerationOptions) (*types.GenerationOptions, string, error) {
+	options := make([]string, 0, len(stylePresets)+3)
+	foundCurrent := false
 	for _, preset := range stylePresets {
 		options = append(options, preset.Label)
+		if preset.Label == currentLabel {
+			foundCurrent = true
+		}
+	}
+	if currentOpts != nil && currentLabel != "" && !foundCurrent {
+		options = append(options, currentLabel)
 	}
 	options = append(options, customStyleOption, styleBackOption)
 
@@ -274,22 +283,22 @@ func promptStyleSelection(currentLabel string) (*types.GenerationOptions, string
 
 	choice, err := selector.Show()
 	if err != nil {
-		return nil, currentLabel, err
+		return currentOpts, currentLabel, err
 	}
 
 	switch choice {
 	case styleBackOption:
-		return nil, currentLabel, errSelectionCancelled
+		return currentOpts, currentLabel, errSelectionCancelled
 	case customStyleOption:
 		text, err := pterm.DefaultInteractiveTextInput.
 			WithDefaultText("Describe the tone or style you're looking for").
 			Show()
 		if err != nil {
-			return nil, currentLabel, err
+			return currentOpts, currentLabel, err
 		}
 		text = strings.TrimSpace(text)
 		if text == "" {
-			return nil, currentLabel, errSelectionCancelled
+			return currentOpts, currentLabel, errSelectionCancelled
 		}
 		return &types.GenerationOptions{StyleInstruction: text}, formatCustomStyleLabel(text), nil
 	default:
@@ -301,8 +310,16 @@ func promptStyleSelection(currentLabel string) (*types.GenerationOptions, string
 				return &types.GenerationOptions{StyleInstruction: preset.Instruction}, preset.Label, nil
 			}
 		}
+		if currentOpts != nil && choice == currentLabel {
+			clone := *currentOpts
+			return &clone, currentLabel, nil
+		}
 	}
 
+	if currentOpts != nil && currentLabel != "" {
+		clone := *currentOpts
+		return &clone, currentLabel, nil
+	}
 	return nil, currentLabel, nil
 }
 

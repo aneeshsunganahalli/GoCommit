@@ -225,11 +225,11 @@ Select: Delete
 
 1. Install Ollama: Visit [Ollama.ai](https://ollama.ai/) and follow installation instructions
 2. Start Ollama: `ollama serve`
-3. Pull a model: `ollama pull llama3`
+3. Pull a model: `ollama pull llama3.1`
 4. Set environment variables:
    ```bash
    export COMMIT_LLM=ollama
-   export OLLAMA_MODEL=llama3  # llama3 by default
+   export OLLAMA_MODEL=llama3.1  # llama3.1 by default
    ```
 
 ---
