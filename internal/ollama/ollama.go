@@ -1,30 +1,29 @@
 package ollama
 
 import (
-	"fmt"
-	"net/http"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/dfanso/commit-msg/pkg/types"
-
 )
 
 type OllamaRequest struct {
-	Model string `json:"model"`
+	Model  string `json:"model"`
 	Prompt string `json:"prompt"`
 }
 
 type OllamaResponse struct {
 	Response string `json:"response"`
-	Done bool `json:"done"`
+	Done     bool   `json:"done"`
 }
 
 func GenerateCommitMessage(_ *types.Config, changes string, url string, model string) (string, error) {
 	// Use llama3:latest as the default model
 	if model == "" {
-		model = "llama3:latest" 
+		model = "llama3:latest"
 	}
 
 	// Preparing the prompt
@@ -36,7 +35,7 @@ func GenerateCommitMessage(_ *types.Config, changes string, url string, model st
 		"prompt": prompt,
 		"stream": false,
 	}
-	
+
 	// Generating the body
 	body, err := json.Marshal(reqBody)
 	if err != nil {

@@ -5,57 +5,58 @@ import (
 	"fmt"
 
 	"github.com/dfanso/commit-msg/cmd/cli/store"
+	"github.com/dfanso/commit-msg/pkg/types"
 	"github.com/manifoldco/promptui"
 )
 
-
 func SetupLLM() error {
 
-	providers := []string{"OpenAI", "Claude", "Gemini", "Grok", "Groq", "Ollama"}
+	providers := types.GetSupportedProviderStrings()
 	prompt := promptui.Select{
 		Label: "Select LLM",
 		Items: providers,
 	}
 
-	_, model, err := prompt.Run()
+	_, modelStr, err := prompt.Run()
 	if err != nil {
 		return fmt.Errorf("prompt failed")
 	}
 
+	model, valid := types.ParseLLMProvider(modelStr)
+	if !valid {
+		return fmt.Errorf("invalid LLM provider: %s", modelStr)
+	}
+
 	var apiKey string
-	
+
 	// Skip API key prompt for Ollama (local LLM)
 	apiKeyPrompt := promptui.Prompt{
-			Label: "Enter API Key",
-			Mask: '*',
-		}
-	
-	
-		switch model {
-		case "Ollama":
-			urlPrompt := promptui.Prompt{
-			Label: "Enter URL",
-			}
-			apiKey, err = urlPrompt.Run()
-			if err != nil {
-			return fmt.Errorf("failed to read Url: %w", err)
-			}
+		Label: "Enter API Key",
+		Mask:  '*',
+	}
 
-		default:
-			apiKey, err = apiKeyPrompt.Run()
-			if err != nil {
+	switch model {
+	case types.ProviderOllama:
+		urlPrompt := promptui.Prompt{
+			Label: "Enter URL",
+		}
+		apiKey, err = urlPrompt.Run()
+		if err != nil {
+			return fmt.Errorf("failed to read Url: %w", err)
+		}
+
+	default:
+		apiKey, err = apiKeyPrompt.Run()
+		if err != nil {
 			return fmt.Errorf("failed to read API Key: %w", err)
 		}
 
-		}
-
+	}
 
 	LLMConfig := store.LLMProvider{
 		LLM:    model,
 		APIKey: apiKey,
 	}
-
-
 
 	err = store.Save(LLMConfig)
 	if err != nil {
@@ -67,15 +68,15 @@ func SetupLLM() error {
 }
 
 func UpdateLLM() error {
-	
+
 	SavedModels, err := store.ListSavedModels()
 	if err != nil {
 		return err
 	}
 
 	if len(SavedModels.LLMProviders) == 0 {
-		 return errors.New("no model exists, Please add atleast one model Run: 'commit llm setup'")
-		 
+		return errors.New("no model exists, Please add atleast one model Run: 'commit llm setup'")
+
 	}
 
 	models := []string{}
@@ -83,7 +84,7 @@ func UpdateLLM() error {
 	options2 := []string{"Set Default", "Change URL", "Delete"} //different option for local model
 
 	for _, p := range SavedModels.LLMProviders {
-		models = append(models, p.LLM)
+		models = append(models, p.LLM.String())
 	}
 
 	prompt := promptui.Select{
@@ -91,65 +92,75 @@ func UpdateLLM() error {
 		Items: models,
 	}
 
-	_,model,err := prompt.Run()
+	_, model, err := prompt.Run()
 	if err != nil {
 		return err
 	}
 
-		prompt = promptui.Select{
+	prompt = promptui.Select{
 		Label: "Select Option",
 		Items: options1,
-		}
+	}
 
-		apiKeyPrompt := promptui.Prompt {
+	apiKeyPrompt := promptui.Prompt{
 		Label: "Enter API Key",
-		}
+	}
 
-	
-		if model == "Ollama" {
-			prompt = promptui.Select{
+	if model == types.ProviderOllama.String() {
+		prompt = promptui.Select{
 			Label: "Select Option",
-				Items: options2,
-			}
-
-			apiKeyPrompt = promptui.Prompt {
-				Label: "Enter URL",
-			}
+			Items: options2,
 		}
 
+		apiKeyPrompt = promptui.Prompt{
+			Label: "Enter URL",
+		}
+	}
 
-	opNo,_,err := prompt.Run()
+	opNo, _, err := prompt.Run()
 	if err != nil {
 		return err
 	}
 
-
-
 	switch opNo {
-		case 0:
-			err := store.ChangeDefault(model)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%s set as default", model)
-		case 1:
-			apiKey, err := apiKeyPrompt.Run()
-			if err !=  nil {
-				return err
-			}
-			err = store.UpdateAPIKey(model, apiKey)
-			if err != nil {
-				return err
-			}
-			event := "API Key"
-			if model == "Ollama"{event = "URL"} 
-			fmt.Printf("%s %s Updated", model,event)
-		case 2:
-			err := store.DeleteModel(model)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%s model deleted", model)			
+	case 0:
+		modelProvider, valid := types.ParseLLMProvider(model)
+		if !valid {
+			return fmt.Errorf("invalid LLM provider: %s", model)
+		}
+		err := store.ChangeDefault(modelProvider)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s set as default", model)
+	case 1:
+		apiKey, err := apiKeyPrompt.Run()
+		if err != nil {
+			return err
+		}
+		modelProvider, valid := types.ParseLLMProvider(model)
+		if !valid {
+			return fmt.Errorf("invalid LLM provider: %s", model)
+		}
+		err = store.UpdateAPIKey(modelProvider, apiKey)
+		if err != nil {
+			return err
+		}
+		event := "API Key"
+		if model == types.ProviderOllama.String() {
+			event = "URL"
+		}
+		fmt.Printf("%s %s Updated", model, event)
+	case 2:
+		modelProvider, valid := types.ParseLLMProvider(model)
+		if !valid {
+			return fmt.Errorf("invalid LLM provider: %s", model)
+		}
+		err := store.DeleteModel(modelProvider)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s model deleted", model)
 	}
 
 	return nil

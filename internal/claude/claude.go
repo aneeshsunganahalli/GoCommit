@@ -68,7 +68,7 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("claude AI response %d", resp.StatusCode) 
+		return "", fmt.Errorf("claude AI response %d", resp.StatusCode)
 	}
 
 	var claudeResponse ClaudeResponse

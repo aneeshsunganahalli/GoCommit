@@ -50,7 +50,7 @@ var llmUpdateCmd = &cobra.Command{
 }
 
 var creatCommitMsg = &cobra.Command{
-	Use: ".",
+	Use:   ".",
 	Short: "Create Commit Message",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		CreateCommitMsg()
@@ -73,4 +73,3 @@ func init() {
 	llmCmd.AddCommand(llmSetupCmd)
 	llmCmd.AddCommand(llmUpdateCmd)
 }
-

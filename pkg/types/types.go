@@ -1,5 +1,54 @@
 package types
 
+type LLMProvider string
+
+const (
+	ProviderOpenAI LLMProvider = "OpenAI"
+	ProviderClaude LLMProvider = "Claude"
+	ProviderGemini LLMProvider = "Gemini"
+	ProviderGrok   LLMProvider = "Grok"
+	ProviderGroq   LLMProvider = "Groq"
+	ProviderOllama LLMProvider = "Ollama"
+)
+
+func (p LLMProvider) String() string {
+	return string(p)
+}
+
+func (p LLMProvider) IsValid() bool {
+	switch p {
+	case ProviderOpenAI, ProviderClaude, ProviderGemini, ProviderGrok, ProviderGroq, ProviderOllama:
+		return true
+	default:
+		return false
+	}
+}
+
+func GetSupportedProviders() []LLMProvider {
+	return []LLMProvider{
+		ProviderOpenAI,
+		ProviderClaude,
+		ProviderGemini,
+		ProviderGrok,
+		ProviderGroq,
+		ProviderOllama,
+	}
+}
+
+func GetSupportedProviderStrings() []string {
+	providers := GetSupportedProviders()
+	strings := make([]string, len(providers))
+	for i, provider := range providers {
+		strings[i] = provider.String()
+	}
+	return strings
+}
+
+func ParseLLMProvider(s string) (LLMProvider, bool) {
+	provider := LLMProvider(s)
+	return provider, provider.IsValid()
+}
+
 // Configuration structure
 type Config struct {
 	GrokAPI string                `json:"grok_api"`

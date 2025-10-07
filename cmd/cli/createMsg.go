@@ -18,11 +18,10 @@ import (
 	"github.com/pterm/pterm"
 )
 
+func CreateCommitMsg() {
 
-func CreateCommitMsg () {
-	
-    // Validate COMMIT_LLM and required API keys
-	useLLM,err := store.DefaultLLMKey()
+	// Validate COMMIT_LLM and required API keys
+	useLLM, err := store.DefaultLLMKey()
 	if err != nil {
 		pterm.Error.Printf("No LLM configured. Run: commit llm setup\n")
 		os.Exit(1)
@@ -31,144 +30,142 @@ func CreateCommitMsg () {
 	commitLLM := useLLM.LLM
 	apiKey := useLLM.APIKey
 
+	// Get current directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		pterm.Error.Printf("Failed to get current directory: %v\n", err)
+		os.Exit(1)
+	}
 
-		// Get current directory
-		currentDir, err := os.Getwd()
-		if err != nil {
-			pterm.Error.Printf("Failed to get current directory: %v\n", err)
-			os.Exit(1)
-		}
+	// Check if current directory is a git repository
+	if !git.IsRepository(currentDir) {
+		pterm.Error.Printf("Current directory is not a Git repository: %s\n", currentDir)
+		os.Exit(1)
+	}
 
-		// Check if current directory is a git repository
-		if !git.IsRepository(currentDir) {
-			pterm.Error.Printf("Current directory is not a Git repository: %s\n", currentDir)
-			os.Exit(1)
-		}
+	// Create a minimal config for the API
+	config := &types.Config{
+		GrokAPI: "https://api.x.ai/v1/chat/completions",
+	}
 
-		// Create a minimal config for the API
-		config := &types.Config{
-			GrokAPI: "https://api.x.ai/v1/chat/completions",
-		}
+	// Create a repo config for the current directory
+	repoConfig := types.RepoConfig{
+		Path: currentDir,
+	}
 
-		// Create a repo config for the current directory
-		repoConfig := types.RepoConfig{
-			Path: currentDir,
-		}
+	// Get file statistics before fetching changes
+	fileStats, err := stats.GetFileStatistics(&repoConfig)
+	if err != nil {
+		pterm.Error.Printf("Failed to get file statistics: %v\n", err)
+		os.Exit(1)
+	}
 
-		// Get file statistics before fetching changes
-		fileStats, err := stats.GetFileStatistics(&repoConfig)
-		if err != nil {
-			pterm.Error.Printf("Failed to get file statistics: %v\n", err)
-			os.Exit(1)
-		}
+	// Display header
+	pterm.DefaultHeader.WithFullWidth().
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
+		WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
+		Println("Commit Message Generator")
 
-		// Display header
-		pterm.DefaultHeader.WithFullWidth().
-			WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
-			WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
-			Println("Commit Message Generator")
+	pterm.Println()
 
-		pterm.Println()
+	// Display file statistics with icons
+	display.ShowFileStatistics(fileStats)
 
-		// Display file statistics with icons
-		display.ShowFileStatistics(fileStats)
+	if fileStats.TotalFiles == 0 {
+		pterm.Warning.Println("No changes detected in the Git repository.")
+		pterm.Info.Println("Tips:")
+		pterm.Info.Println("  - Stage your changes with: git add .")
+		pterm.Info.Println("  - Check repository status with: git status")
+		pterm.Info.Println("  - Make sure you're in the correct Git repository")
+		return
+	}
 
-		if fileStats.TotalFiles == 0 {
-			pterm.Warning.Println("No changes detected in the Git repository.")
-			pterm.Info.Println("Tips:")
-			pterm.Info.Println("  - Stage your changes with: git add .")
-			pterm.Info.Println("  - Check repository status with: git status")
-			pterm.Info.Println("  - Make sure you're in the correct Git repository")
-			return
-		}
+	// Get the changes
+	changes, err := git.GetChanges(&repoConfig)
+	if err != nil {
+		pterm.Error.Printf("Failed to get Git changes: %v\n", err)
+		os.Exit(1)
+	}
 
-		// Get the changes
-		changes, err := git.GetChanges(&repoConfig)
-		if err != nil {
-			pterm.Error.Printf("Failed to get Git changes: %v\n", err)
-			os.Exit(1)
-		}
+	if len(changes) == 0 {
+		pterm.Warning.Println("No changes detected in the Git repository.")
+		pterm.Info.Println("Tips:")
+		pterm.Info.Println("  - Stage your changes with: git add .")
+		pterm.Info.Println("  - Check repository status with: git status")
+		pterm.Info.Println("  - Make sure you're in the correct Git repository")
+		return
+	}
 
-		if len(changes) == 0 {
-			pterm.Warning.Println("No changes detected in the Git repository.")
-			pterm.Info.Println("Tips:")
-			pterm.Info.Println("  - Stage your changes with: git add .")
-			pterm.Info.Println("  - Check repository status with: git status")
-			pterm.Info.Println("  - Make sure you're in the correct Git repository")
-			return
-		}
+	pterm.Println()
 
-		pterm.Println()
+	// Show generating spinner
+	spinnerGenerating, err := pterm.DefaultSpinner.
+		WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
+		Start("Generating commit message with " + commitLLM.String() + "...")
+	if err != nil {
+		pterm.Error.Printf("Failed to start spinner: %v\n", err)
+		os.Exit(1)
+	}
 
-		// Show generating spinner
-		spinnerGenerating, err := pterm.DefaultSpinner.
-			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
-			Start("Generating commit message with " + commitLLM + "...")
-		if err != nil {
-			pterm.Error.Printf("Failed to start spinner: %v\n", err)
-			os.Exit(1)
-		}
+	var commitMsg string
 
-		var commitMsg string
+	switch commitLLM {
 
+	case types.ProviderGemini:
+		commitMsg, err = gemini.GenerateCommitMessage(config, changes, apiKey)
+
+	case types.ProviderOpenAI:
+		commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
+
+	case types.ProviderClaude:
+		commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
+	case types.ProviderGroq:
+		commitMsg, err = groq.GenerateCommitMessage(config, changes, apiKey)
+	case types.ProviderOllama:
+		model := "llama3:latest"
+
+		commitMsg, err = ollama.GenerateCommitMessage(config, changes, apiKey, model)
+	default:
+		commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
+	}
+
+	if err != nil {
+		spinnerGenerating.Fail("Failed to generate commit message")
 		switch commitLLM {
-			
-		case "Gemini":
-			commitMsg, err = gemini.GenerateCommitMessage(config, changes, apiKey)
-
-		case "OpenAI":
-			commitMsg, err = chatgpt.GenerateCommitMessage(config, changes, apiKey)
-		
-		case "Claude":
-			commitMsg, err = claude.GenerateCommitMessage(config, changes, apiKey)
-		case "Groq":
-			commitMsg, err = groq.GenerateCommitMessage(config, changes, apiKey)
-		case "Ollama":
-			model := "llama3:latest"
-			
-			commitMsg, err = ollama.GenerateCommitMessage(config, changes, apiKey, model)
+		case types.ProviderGemini:
+			pterm.Error.Printf("Gemini API error. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n")
+		case types.ProviderOpenAI:
+			pterm.Error.Printf("OpenAI API error. Check your OPENAI_API_KEY environment variable or run: commit llm setup\n")
+		case types.ProviderClaude:
+			pterm.Error.Printf("Claude API error. Check your CLAUDE_API_KEY environment variable or run: commit llm setup\n")
+		case types.ProviderGroq:
+			pterm.Error.Printf("Groq API error. Check your GROQ_API_KEY environment variable or run: commit llm setup\n")
+		case types.ProviderGrok:
+			pterm.Error.Printf("Grok API error. Check your GROK_API_KEY environment variable or run: commit llm setup\n")
 		default:
-			commitMsg, err = grok.GenerateCommitMessage(config, changes, apiKey)
+			pterm.Error.Printf("LLM API error: %v\n", err)
 		}
+		os.Exit(1)
+	}
 
-		
-		if err != nil {
-			spinnerGenerating.Fail("Failed to generate commit message")
-			switch commitLLM {
-			case "Gemini":
-				pterm.Error.Printf("Gemini API error. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n")
-			case "OpenAI":
-				pterm.Error.Printf("OpenAI API error. Check your OPENAI_API_KEY environment variable or run: commit llm setup\n")
-			case "Claude":
-				pterm.Error.Printf("Claude API error. Check your CLAUDE_API_KEY environment variable or run: commit llm setup\n")
-			case "Groq":
-				pterm.Error.Printf("Groq API error. Check your GROQ_API_KEY environment variable or run: commit llm setup\n")
-			case "Grok":
-				pterm.Error.Printf("Grok API error. Check your GROK_API_KEY environment variable or run: commit llm setup\n")
-			default:
-				pterm.Error.Printf("LLM API error: %v\n", err)
-			}
-			os.Exit(1)
-		}
+	spinnerGenerating.Success("Commit message generated successfully!")
 
-		spinnerGenerating.Success("Commit message generated successfully!")
+	pterm.Println()
 
-		pterm.Println()
+	// Display the commit message in a styled panel
+	display.ShowCommitMessage(commitMsg)
 
-		// Display the commit message in a styled panel
-		display.ShowCommitMessage(commitMsg)
+	// Copy to clipboard
+	err = clipboard.WriteAll(commitMsg)
+	if err != nil {
+		pterm.Warning.Printf("Could not copy to clipboard: %v\n", err)
+	} else {
+		pterm.Success.Println("Commit message copied to clipboard!")
+	}
 
-		// Copy to clipboard
-		err = clipboard.WriteAll(commitMsg)
-		if err != nil {
-			pterm.Warning.Printf("Could not copy to clipboard: %v\n", err)
-		} else {
-			pterm.Success.Println("Commit message copied to clipboard!")
-		}
+	pterm.Println()
 
-		pterm.Println()
-
-		// Display changes preview
-		display.ShowChangesPreview(fileStats)
+	// Display changes preview
+	display.ShowChangesPreview(fileStats)
 
 }

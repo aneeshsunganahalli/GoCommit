@@ -7,25 +7,26 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/dfanso/commit-msg/pkg/types"
 )
 
 type LLMProvider struct {
-	LLM string `json:"model"`
-	APIKey string `json:"api_key"`
+	LLM    types.LLMProvider `json:"model"`
+	APIKey string            `json:"api_key"`
 }
 
 type Config struct {
-	Default string `json:"default"`
-	LLMProviders []LLMProvider `json:"models"`
+	Default      types.LLMProvider `json:"default"`
+	LLMProviders []LLMProvider     `json:"models"`
 }
 
 func Save(LLMConfig LLMProvider) error {
-	
-	cfg := Config{
-		LLMConfig.LLM,
-		[]LLMProvider{LLMConfig},
-	}
 
+	cfg := Config{
+		Default:      LLMConfig.LLM,
+		LLMProviders: []LLMProvider{LLMConfig},
+	}
 
 	configPath, err := getConfigPath()
 	if err != nil {
@@ -40,14 +41,12 @@ func Save(LLMConfig LLMProvider) error {
 		}
 	}
 
-
 	data, err := os.ReadFile(configPath)
-	if errors.Is(err, os.ErrNotExist){
+	if errors.Is(err, os.ErrNotExist) {
 		data = []byte("{}")
 	} else if err != nil {
 		return err
 	}
-
 
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &cfg)
@@ -55,8 +54,7 @@ func Save(LLMConfig LLMProvider) error {
 			return err
 		}
 	}
-	
-	
+
 	updated := false
 	for i, p := range cfg.LLMProviders {
 		if p.LLM == LLMConfig.LLM {
@@ -70,8 +68,7 @@ func Save(LLMConfig LLMProvider) error {
 		cfg.LLMProviders = append(cfg.LLMProviders, LLMConfig)
 	}
 
-	cfg.Default = LLMConfig.LLM 
-
+	cfg.Default = LLMConfig.LLM
 
 	data, err = json.MarshalIndent(cfg, "", " ")
 	if err != nil {
@@ -81,17 +78,15 @@ func Save(LLMConfig LLMProvider) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
-
 func checkConfig(configPath string) bool {
 
-	_,err := os.Stat(configPath)
-	if err != nil ||os.IsNotExist(err)  {
+	_, err := os.Stat(configPath)
+	if err != nil || os.IsNotExist(err) {
 		return false
 	}
 
 	return true
 }
-
 
 func createConfigFile(configPath string) error {
 
@@ -148,7 +143,7 @@ func DefaultLLMKey() (*LLMProvider, error) {
 
 	var cfg Config
 	var useModel LLMProvider
-	
+
 	configPath, err := getConfigPath()
 	if err != nil {
 		return nil, err
@@ -159,7 +154,6 @@ func DefaultLLMKey() (*LLMProvider, error) {
 		return nil, errors.New("config file Not exists")
 	}
 
-	
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
@@ -174,22 +168,19 @@ func DefaultLLMKey() (*LLMProvider, error) {
 		return nil, errors.New("config file is empty, Please add at least one LLM Key")
 	}
 
-	
-
 	defaultLLM := cfg.Default
 
 	for i, p := range cfg.LLMProviders {
 		if p.LLM == defaultLLM {
-			useModel= cfg.LLMProviders[i]
+			useModel = cfg.LLMProviders[i]
 			return &useModel, nil
 		}
 	}
 	return nil, errors.New("not found default model in config")
 }
 
+func ListSavedModels() (*Config, error) {
 
-func ListSavedModels() (*Config, error){
-	
 	var cfg Config
 
 	configPath, err := getConfigPath()
@@ -216,13 +207,11 @@ func ListSavedModels() (*Config, error){
 		return nil, errors.New("config file is empty, Please add at least one LLM Key")
 	}
 
-
 	return &cfg, nil
 
 }
 
-
-func ChangeDefault(Model string) error {
+func ChangeDefault(Model types.LLMProvider) error {
 
 	var cfg Config
 
@@ -242,10 +231,10 @@ func ChangeDefault(Model string) error {
 	}
 
 	if len(data) > 0 {
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return err
-	}
+		err = json.Unmarshal(data, &cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	cfg.Default = Model
@@ -258,9 +247,8 @@ func ChangeDefault(Model string) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
+func DeleteModel(Model types.LLMProvider) error {
 
-func DeleteModel(Model string) error {
-	
 	var cfg Config
 	var newCfg Config
 
@@ -280,44 +268,41 @@ func DeleteModel(Model string) error {
 	}
 
 	if len(data) > 0 {
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return err
+		err = json.Unmarshal(data, &cfg)
+		if err != nil {
+			return err
+		}
 	}
-	}
-
 
 	if Model == cfg.Default {
 		if len(cfg.LLMProviders) > 1 {
-			return fmt.Errorf("cannot delete %s while it is default, set other model default first", Model)
+			return fmt.Errorf("cannot delete %s while it is default, set other model default first", Model.String())
 		} else {
 			return os.WriteFile(configPath, []byte("{}"), 0600)
 		}
 	} else {
 
-		for _,p := range cfg.LLMProviders {
-			
+		for _, p := range cfg.LLMProviders {
+
 			if p.LLM != Model {
 				newCfg.LLMProviders = append(newCfg.LLMProviders, p)
 			}
 		}
 
-			newCfg.Default = cfg.Default
+		newCfg.Default = cfg.Default
 
-			data, err = json.MarshalIndent(newCfg, "", " ")
-			if err != nil {
+		data, err = json.MarshalIndent(newCfg, "", " ")
+		if err != nil {
 			return err
-			}
-			return os.WriteFile(configPath, data, 0600)		
+		}
+		return os.WriteFile(configPath, data, 0600)
 
 	}
 }
 
-
-func UpdateAPIKey(Model, APIKey string) error {
+func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 
 	var cfg Config
-
 
 	configPath, err := getConfigPath()
 	if err != nil {
@@ -335,10 +320,10 @@ func UpdateAPIKey(Model, APIKey string) error {
 	}
 
 	if len(data) > 0 {
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return err
-	}
+		err = json.Unmarshal(data, &cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	for i, p := range cfg.LLMProviders {
