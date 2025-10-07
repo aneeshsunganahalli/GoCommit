@@ -9,6 +9,8 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
+// SetupLLM walks the user through selecting an LLM provider and storing the
+// corresponding API key or endpoint configuration.
 func SetupLLM() error {
 
 	providers := types.GetSupportedProviderStrings()
@@ -67,6 +69,8 @@ func SetupLLM() error {
 	return nil
 }
 
+// UpdateLLM lets the user switch defaults, rotate API keys, or delete stored
+// LLM provider configurations.
 func UpdateLLM() error {
 
 	SavedModels, err := store.ListSavedModels()

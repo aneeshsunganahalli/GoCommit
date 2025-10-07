@@ -43,12 +43,12 @@ var (
 )
 
 // GenerateCommitMessage calls Groq's OpenAI-compatible chat completions API.
-func GenerateCommitMessage(_ *types.Config, changes string, apiKey string) (string, error) {
+func GenerateCommitMessage(_ *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	if changes == "" {
 		return "", fmt.Errorf("no changes provided for commit message generation")
 	}
 
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	model := os.Getenv("GROQ_MODEL")
 	if model == "" {

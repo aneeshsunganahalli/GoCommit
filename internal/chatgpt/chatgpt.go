@@ -10,11 +10,13 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
-func GenerateCommitMessage(config *types.Config, changes string, apiKey string) (string, error) {
+// GenerateCommitMessage calls OpenAI's chat completions API to turn the provided
+// repository changes into a polished git commit message.
+func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 
 	client := openai.NewClient(option.WithAPIKey(apiKey))
 
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	resp, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{

@@ -6,6 +6,7 @@ toolchain go1.24.7
 
 require (
 	github.com/atotto/clipboard v0.1.4
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/generative-ai-go v0.19.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/openai/openai-go/v3 v3.0.1

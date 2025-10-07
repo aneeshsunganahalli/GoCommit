@@ -10,24 +10,28 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+// OllamaRequest captures the prompt payload sent to an Ollama HTTP endpoint.
 type OllamaRequest struct {
 	Model  string `json:"model"`
 	Prompt string `json:"prompt"`
 }
 
+// OllamaResponse represents the non-streaming response from Ollama.
 type OllamaResponse struct {
 	Response string `json:"response"`
 	Done     bool   `json:"done"`
 }
 
-func GenerateCommitMessage(_ *types.Config, changes string, url string, model string) (string, error) {
+// GenerateCommitMessage uses a locally hosted Ollama model to draft a commit
+// message from repository changes and optional style guidance.
+func GenerateCommitMessage(_ *types.Config, changes string, url string, model string, opts *types.GenerationOptions) (string, error) {
 	// Use llama3:latest as the default model
 	if model == "" {
 		model = "llama3:latest"
 	}
 
 	// Preparing the prompt
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	// Generating the request body - add stream: false for non-streaming response
 	reqBody := map[string]interface{}{
