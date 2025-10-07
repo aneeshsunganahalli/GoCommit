@@ -33,12 +33,24 @@ Looking to contribute? Check out:
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 🎛️ **Interactive Review Flow** - Accept, regenerate with new styles, or open the message in your editor before committing  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
-🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
+� **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
+�🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
 ⚡ **Fast** - Quick generation of commit messages
 
 ## Supported LLM Providers
 
 You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** (local) as the LLM to generate commit messages:
+
+## 🔒 Security & Privacy
+
+`commit-msg` automatically scrubs sensitive data from your code before sending it to LLM providers:
+
+- **API Keys & Tokens** - OpenAI, Gemini, Claude, GitHub, Slack, AWS credentials
+- **Passwords & Secrets** - Database passwords, JWT tokens, private keys
+- **Personal Data** - Email addresses, credit card numbers
+- **Environment Variables** - Automatic detection and redaction of sensitive `.env` files
+
+All scrubbing happens locally before any data leaves your machine, ensuring your secrets stay secure.
 
 ---
 
