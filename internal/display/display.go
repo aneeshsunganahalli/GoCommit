@@ -112,10 +112,10 @@ func ShowCommitMessage(message string) {
 		WithBoxStyle(pterm.NewStyle(pterm.FgLightGreen)).
 		WithHorizontalString("─").
 		WithVerticalString("│").
-		WithTopLeftCornerString("┌").
-		WithTopRightCornerString("┐").
-		WithBottomLeftCornerString("└").
-		WithBottomRightCornerString("┘")
+		WithTopLeftCornerString("┘").
+		WithTopRightCornerString("└").
+		WithBottomLeftCornerString("┐").
+		WithBottomRightCornerString("┌")
 
 	panel.Println(pterm.LightGreen(message))
 }
