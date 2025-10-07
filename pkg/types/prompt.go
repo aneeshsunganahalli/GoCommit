@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	"strings"
+)
+
 var CommitPrompt = `I need a concise git commit message based on the following changes from my Git repository.
 Please generate a commit message that:
 1. Starts with a verb in the present tense (e.g., "Add", "Fix", "Update", "Feat", "Refactor", etc.)
@@ -17,3 +22,28 @@ here is a sample commit msgs:
 - variable. Also updates dependencies and README.'
 Here are the changes:
 `
+
+// BuildCommitPrompt constructs the prompt that will be sent to the LLM, applying
+// any optional tone/style instructions before appending the repository changes.
+func BuildCommitPrompt(changes string, opts *GenerationOptions) string {
+	var builder strings.Builder
+	builder.WriteString(CommitPrompt)
+
+	if opts != nil {
+		if opts.Attempt > 1 {
+			builder.WriteString("\n\nRegeneration context:\n")
+			builder.WriteString(fmt.Sprintf("- This is attempt #%d.\n", opts.Attempt))
+			builder.WriteString("- Provide a commit message that is meaningfully different from earlier attempts.\n")
+		}
+
+		if strings.TrimSpace(opts.StyleInstruction) != "" {
+			builder.WriteString("\n\nAdditional instructions:\n")
+			builder.WriteString(strings.TrimSpace(opts.StyleInstruction))
+		}
+	}
+
+	builder.WriteString("\n\n")
+	builder.WriteString(changes)
+
+	return builder.String()
+}

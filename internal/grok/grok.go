@@ -12,9 +12,9 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
-func GenerateCommitMessage(config *types.Config, changes string, apiKey string) (string, error) {
+func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	// Prepare request to X.AI (Grok) API
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	request := types.GrokRequest{
 

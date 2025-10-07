@@ -20,14 +20,14 @@ type OllamaResponse struct {
 	Done     bool   `json:"done"`
 }
 
-func GenerateCommitMessage(_ *types.Config, changes string, url string, model string) (string, error) {
+func GenerateCommitMessage(_ *types.Config, changes string, url string, model string, opts *types.GenerationOptions) (string, error) {
 	// Use llama3:latest as the default model
 	if model == "" {
 		model = "llama3:latest"
 	}
 
 	// Preparing the prompt
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	// Generating the request body - add stream: false for non-streaming response
 	reqBody := map[string]interface{}{

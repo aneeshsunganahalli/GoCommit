@@ -30,9 +30,9 @@ type ClaudeResponse struct {
 	} `json:"content"`
 }
 
-func GenerateCommitMessage(config *types.Config, changes string, apiKey string) (string, error) {
+func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 
-	prompt := fmt.Sprintf("%s\n\n%s", types.CommitPrompt, changes)
+	prompt := types.BuildCommitPrompt(changes, opts)
 
 	reqBody := ClaudeRequest{
 		Model:     "claude-3-5-sonnet-20241022",

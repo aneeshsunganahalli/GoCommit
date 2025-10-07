@@ -48,3 +48,58 @@ func TestCommitPromptContent(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildCommitPromptDefault(t *testing.T) {
+	t.Parallel()
+
+	changes := "diff --git a/main.go b/main.go"
+	prompt := BuildCommitPrompt(changes, nil)
+
+	if !strings.HasSuffix(prompt, changes) {
+		t.Fatalf("expected prompt to end with changes, got %q", prompt)
+	}
+
+	if strings.Contains(prompt, "Additional instructions:") {
+		t.Fatalf("expected no additional instructions block in default prompt")
+	}
+}
+
+func TestBuildCommitPromptWithInstructions(t *testing.T) {
+	t.Parallel()
+
+	changes := "diff --git a/main.go b/main.go"
+	options := &GenerationOptions{StyleInstruction: "Use a playful tone."}
+	prompt := BuildCommitPrompt(changes, options)
+
+	if !strings.Contains(prompt, "Additional instructions:") {
+		t.Fatalf("expected prompt to contain additional instructions block")
+	}
+
+	if !strings.Contains(prompt, options.StyleInstruction) {
+		t.Fatalf("expected prompt to include style instruction %q", options.StyleInstruction)
+	}
+
+	if !strings.HasSuffix(prompt, changes) {
+		t.Fatalf("expected prompt to end with changes, got %q", prompt)
+	}
+}
+
+func TestBuildCommitPromptWithAttempt(t *testing.T) {
+	t.Parallel()
+
+	changes := "diff --git a/main.go b/main.go"
+	options := &GenerationOptions{Attempt: 3}
+	prompt := BuildCommitPrompt(changes, options)
+
+	if !strings.Contains(prompt, "Regeneration context:") {
+		t.Fatalf("expected regeneration context section, got %q", prompt)
+	}
+
+	if !strings.Contains(prompt, "attempt #3") {
+		t.Fatalf("expected attempt number to be mentioned, got %q", prompt)
+	}
+
+	if !strings.HasSuffix(prompt, changes) {
+		t.Fatalf("expected prompt to end with changes, got %q", prompt)
+	}
+}

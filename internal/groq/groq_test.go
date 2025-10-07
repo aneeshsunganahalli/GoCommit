@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/dfanso/commit-msg/pkg/types"
@@ -73,7 +74,7 @@ func TestGenerateCommitMessageSuccess(t *testing.T) {
 			t.Fatalf("failed to write response: %v", err)
 		}
 	}, func() {
-		msg, err := GenerateCommitMessage(&types.Config{}, "diff", "test-key")
+		msg, err := GenerateCommitMessage(&types.Config{}, "diff", "test-key", nil)
 		if err != nil {
 			t.Fatalf("GenerateCommitMessage returned error: %v", err)
 		}
@@ -89,7 +90,7 @@ func TestGenerateCommitMessageNonOK(t *testing.T) {
 	withTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"bad things"}`, http.StatusBadGateway)
 	}, func() {
-		_, err := GenerateCommitMessage(&types.Config{}, "changes", "key")
+		_, err := GenerateCommitMessage(&types.Config{}, "changes", "key", nil)
 		if err == nil {
 			t.Fatal("expected error but got nil")
 		}
@@ -100,7 +101,45 @@ func TestGenerateCommitMessageEmptyChanges(t *testing.T) {
 	t.Setenv("GROQ_MODEL", "")
 	t.Setenv("GROQ_API_URL", "")
 
-	if _, err := GenerateCommitMessage(&types.Config{}, "", "key"); err == nil {
+	if _, err := GenerateCommitMessage(&types.Config{}, "", "key", nil); err == nil {
 		t.Fatal("expected error for empty changes")
+	}
+}
+
+func TestGenerateCommitMessageIncludesStyleInstruction(t *testing.T) {
+	recorded := ""
+
+	withTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		var payload capturedRequest
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Fatalf("failed to decode request: %v", err)
+		}
+		recorded = payload.Messages[1].Content
+
+		resp := chatResponse{
+			Choices: []chatChoice{
+				{Message: chatMessage{Role: "assistant", Content: "feat: add style support"}},
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}, func() {
+		opts := &types.GenerationOptions{StyleInstruction: "Use a casual tone.", Attempt: 2}
+		if _, err := GenerateCommitMessage(&types.Config{}, "diff", "key", opts); err != nil {
+			t.Fatalf("GenerateCommitMessage returned error: %v", err)
+		}
+	})
+
+	if !strings.Contains(recorded, "Additional instructions:") {
+		t.Fatalf("expected request payload to contain additional instructions, got: %q", recorded)
+	}
+	if !strings.Contains(recorded, "Use a casual tone.") {
+		t.Fatalf("expected request payload to contain custom instruction, got: %q", recorded)
+	}
+	if !strings.Contains(recorded, "Regeneration context:") {
+		t.Fatalf("expected request payload to contain regeneration context, got: %q", recorded)
 	}
 }
