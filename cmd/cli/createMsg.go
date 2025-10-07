@@ -151,7 +151,7 @@ func CreateCommitMsg () {
 			os.Exit(1)
 		}
 
-		spinnerGenerating.Success("✅ Commit message generated successfully!")
+		spinnerGenerating.Success("Commit message generated successfully!")
 
 		pterm.Println()
 
@@ -161,9 +161,9 @@ func CreateCommitMsg () {
 		// Copy to clipboard
 		err = clipboard.WriteAll(commitMsg)
 		if err != nil {
-			pterm.Warning.Printf("⚠️  Could not copy to clipboard: %v\n", err)
+			pterm.Warning.Printf("Could not copy to clipboard: %v\n", err)
 		} else {
-			pterm.Success.Println("📋 Commit message copied to clipboard!")
+			pterm.Success.Println("Commit message copied to clipboard!")
 		}
 
 		pterm.Println()

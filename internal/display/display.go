@@ -18,7 +18,7 @@ type FileStatistics struct {
 
 // ShowFileStatistics displays file statistics with colored output
 func ShowFileStatistics(stats *FileStatistics) {
-	pterm.DefaultSection.Println("📊 Changes Summary")
+	pterm.DefaultSection.Println("Changes Summary")
 
 	// Create bullet list items
 	bulletItems := []pterm.BulletListItem{}
@@ -26,7 +26,7 @@ func ShowFileStatistics(stats *FileStatistics) {
 	if len(stats.StagedFiles) > 0 {
 		bulletItems = append(bulletItems, pterm.BulletListItem{
 			Level:       0,
-			Text:        pterm.Green(fmt.Sprintf("✅ Staged files: %d", len(stats.StagedFiles))),
+			Text:        pterm.Green(fmt.Sprintf("Staged files: %d", len(stats.StagedFiles))),
 			TextStyle:   pterm.NewStyle(pterm.FgGreen),
 			BulletStyle: pterm.NewStyle(pterm.FgGreen),
 		})
@@ -49,7 +49,7 @@ func ShowFileStatistics(stats *FileStatistics) {
 	if len(stats.UnstagedFiles) > 0 {
 		bulletItems = append(bulletItems, pterm.BulletListItem{
 			Level:       0,
-			Text:        pterm.Yellow(fmt.Sprintf("⚠️  Unstaged files: %d", len(stats.UnstagedFiles))),
+			Text:        pterm.Yellow(fmt.Sprintf("Unstaged files: %d", len(stats.UnstagedFiles))),
 			TextStyle:   pterm.NewStyle(pterm.FgYellow),
 			BulletStyle: pterm.NewStyle(pterm.FgYellow),
 		})
@@ -72,7 +72,7 @@ func ShowFileStatistics(stats *FileStatistics) {
 	if len(stats.UntrackedFiles) > 0 {
 		bulletItems = append(bulletItems, pterm.BulletListItem{
 			Level:       0,
-			Text:        pterm.Cyan(fmt.Sprintf("📝 Untracked files: %d", len(stats.UntrackedFiles))),
+			Text:        pterm.Cyan(fmt.Sprintf("Untracked files: %d", len(stats.UntrackedFiles))),
 			TextStyle:   pterm.NewStyle(pterm.FgCyan),
 			BulletStyle: pterm.NewStyle(pterm.FgCyan),
 		})
@@ -97,7 +97,7 @@ func ShowFileStatistics(stats *FileStatistics) {
 
 // ShowCommitMessage displays the commit message in a styled panel
 func ShowCommitMessage(message string) {
-	pterm.DefaultSection.Println("📝 Generated Commit Message")
+	pterm.DefaultSection.Println("Generated Commit Message")
 
 	// Create a panel with the commit message
 	panel := pterm.DefaultBox.
@@ -116,7 +116,7 @@ func ShowCommitMessage(message string) {
 
 // ShowChangesPreview displays a preview of changes with line statistics
 func ShowChangesPreview(stats *FileStatistics) {
-	pterm.DefaultSection.Println("🔍 Changes Preview")
+	pterm.DefaultSection.Println("Changes Preview")
 
 	// Create info boxes
 	if stats.LinesAdded > 0 || stats.LinesDeleted > 0 {
