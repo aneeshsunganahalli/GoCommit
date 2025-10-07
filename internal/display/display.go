@@ -6,6 +6,12 @@ import (
 	"github.com/pterm/pterm"
 )
 
+const (
+	MaxStagedFiles    = 5
+	MaxUnstagedFiles  = 3
+	MaxUntrackedFiles = 3
+)
+
 // FileStatistics holds statistics about changed files
 type FileStatistics struct {
 	StagedFiles    []string
@@ -31,17 +37,17 @@ func ShowFileStatistics(stats *FileStatistics) {
 			BulletStyle: pterm.NewStyle(pterm.FgGreen),
 		})
 		for i, file := range stats.StagedFiles {
-			if i < 5 { // Show first 5 files
+			if i < MaxStagedFiles { // Show first 5 files
 				bulletItems = append(bulletItems, pterm.BulletListItem{
 					Level: 1,
 					Text:  file,
 				})
 			}
 		}
-		if len(stats.StagedFiles) > 5 {
+		if len(stats.StagedFiles) > MaxStagedFiles {
 			bulletItems = append(bulletItems, pterm.BulletListItem{
 				Level: 1,
-				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.StagedFiles)-5)),
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.StagedFiles)-MaxStagedFiles)),
 			})
 		}
 	}
@@ -54,17 +60,17 @@ func ShowFileStatistics(stats *FileStatistics) {
 			BulletStyle: pterm.NewStyle(pterm.FgYellow),
 		})
 		for i, file := range stats.UnstagedFiles {
-			if i < 3 {
+			if i < MaxUnstagedFiles {
 				bulletItems = append(bulletItems, pterm.BulletListItem{
 					Level: 1,
 					Text:  file,
 				})
 			}
 		}
-		if len(stats.UnstagedFiles) > 3 {
+		if len(stats.UnstagedFiles) > MaxUnstagedFiles {
 			bulletItems = append(bulletItems, pterm.BulletListItem{
 				Level: 1,
-				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UnstagedFiles)-3)),
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UnstagedFiles)-MaxUnstagedFiles)),
 			})
 		}
 	}
@@ -77,17 +83,17 @@ func ShowFileStatistics(stats *FileStatistics) {
 			BulletStyle: pterm.NewStyle(pterm.FgCyan),
 		})
 		for i, file := range stats.UntrackedFiles {
-			if i < 3 {
+			if i < MaxUntrackedFiles {
 				bulletItems = append(bulletItems, pterm.BulletListItem{
 					Level: 1,
 					Text:  file,
 				})
 			}
 		}
-		if len(stats.UntrackedFiles) > 3 {
+		if len(stats.UntrackedFiles) > MaxUntrackedFiles {
 			bulletItems = append(bulletItems, pterm.BulletListItem{
 				Level: 1,
-				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UntrackedFiles)-3)),
+				Text:  pterm.Gray(fmt.Sprintf("... and %d more", len(stats.UntrackedFiles)-MaxUntrackedFiles)),
 			})
 		}
 	}
