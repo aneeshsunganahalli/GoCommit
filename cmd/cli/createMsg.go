@@ -26,7 +26,8 @@ import (
 
 // CreateCommitMsg launches the interactive flow for reviewing, regenerating,
 // editing, and accepting AI-generated commit messages in the current repo.
-func CreateCommitMsg() {
+// If dryRun is true, it displays the prompt without making an API call.
+func CreateCommitMsg(dryRun bool) {
 	// Validate COMMIT_LLM and required API keys
 	useLLM, err := store.DefaultLLMKey()
 	if err != nil {
@@ -91,6 +92,13 @@ func CreateCommitMsg() {
 		pterm.Info.Println("  - Stage your changes with: git add .")
 		pterm.Info.Println("  - Check repository status with: git status")
 		pterm.Info.Println("  - Make sure you're in the correct Git repository")
+		return
+	}
+
+	// Handle dry-run mode: display what would be sent to LLM without making API call
+	if dryRun {
+		pterm.Println()
+		displayDryRunInfo(commitLLM, config, changes, apiKey)
 		return
 	}
 
@@ -424,4 +432,97 @@ func displayProviderError(provider types.LLMProvider, err error) {
 	default:
 		pterm.Error.Printf("LLM API error: %v\n", err)
 	}
+}
+
+// displayDryRunInfo shows what would be sent to the LLM without making an API call
+func displayDryRunInfo(provider types.LLMProvider, config *types.Config, changes string, apiKey string) {
+	pterm.DefaultHeader.WithFullWidth().
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgBlue)).
+		WithTextStyle(pterm.NewStyle(pterm.FgWhite, pterm.Bold)).
+		Println("DRY RUN MODE - Preview Only")
+
+	pterm.Println()
+	pterm.Info.Println("This is a dry-run. No API call will be made to the LLM provider.")
+	pterm.Println()
+
+	// Display provider information
+	pterm.DefaultSection.Println("LLM Provider Configuration")
+	providerInfo := [][]string{
+		{"Provider", provider.String()},
+	}
+
+	// Add provider-specific info
+	switch provider {
+	case types.ProviderOllama:
+		url := apiKey
+		if strings.TrimSpace(url) == "" {
+			url = os.Getenv("OLLAMA_URL")
+			if url == "" {
+				url = "http://localhost:11434/api/generate"
+			}
+		}
+		model := os.Getenv("OLLAMA_MODEL")
+		if model == "" {
+			model = "llama3.1"
+		}
+		providerInfo = append(providerInfo, []string{"Ollama URL", url})
+		providerInfo = append(providerInfo, []string{"Model", model})
+	case types.ProviderGrok:
+		providerInfo = append(providerInfo, []string{"API Endpoint", config.GrokAPI})
+		providerInfo = append(providerInfo, []string{"API Key", maskAPIKey(apiKey)})
+	default:
+		providerInfo = append(providerInfo, []string{"API Key", maskAPIKey(apiKey)})
+	}
+
+	pterm.DefaultTable.WithHasHeader(false).WithData(providerInfo).Render()
+
+	pterm.Println()
+
+	// Build and display the prompt
+	opts := &types.GenerationOptions{Attempt: 1}
+	prompt := types.BuildCommitPrompt(changes, opts)
+
+	pterm.DefaultSection.Println("Prompt That Would Be Sent")
+	pterm.Println()
+
+	// Display prompt in a box
+	promptBox := pterm.DefaultBox.
+		WithTitle("Full LLM Prompt").
+		WithTitleTopCenter().
+		WithBoxStyle(pterm.NewStyle(pterm.FgCyan))
+	promptBox.Println(prompt)
+
+	pterm.Println()
+
+	// Display changes statistics
+	pterm.DefaultSection.Println("Changes Summary")
+	linesCount := len(strings.Split(changes, "\n"))
+	charsCount := len(changes)
+
+	statsData := [][]string{
+		{"Total Lines", fmt.Sprintf("%d", linesCount)},
+		{"Total Characters", fmt.Sprintf("%d", charsCount)},
+		{"Prompt Size (approx)", fmt.Sprintf("%d tokens", estimateTokens(prompt))},
+	}
+	pterm.DefaultTable.WithHasHeader(false).WithData(statsData).Render()
+
+	pterm.Println()
+	pterm.Success.Println("Dry-run complete. To generate actual commit message, run without --dry-run flag.")
+}
+
+// maskAPIKey masks the API key for display purposes
+func maskAPIKey(apiKey string) string {
+	if len(apiKey) == 0 {
+		return "[NOT SET]"
+	}
+	if len(apiKey) <= 8 {
+		return strings.Repeat("*", len(apiKey))
+	}
+	// Show first 4 and last 4 characters
+	return apiKey[:4] + strings.Repeat("*", len(apiKey)-8) + apiKey[len(apiKey)-4:]
+}
+
+// estimateTokens provides a rough estimate of token count (1 token ≈ 4 characters)
+func estimateTokens(text string) int {
+	return len(text) / 4
 }
