@@ -22,29 +22,92 @@ func IsRepository(path string) bool {
 	return strings.TrimSpace(string(output)) == "true"
 }
 
-// filterBinaryFiles filters out binary files from git diff --name-status output
-func filterBinaryFiles(nameStatusOutput string) string {
+// parseGitStatusLine represents a parsed git status line
+type parseGitStatusLine struct {
+	status    string
+	filenames []string
+}
+
+// parseGitNameStatus parses a single line from git diff --name-status output
+// Handles various git status codes including rename (R) and copy (C) operations
+func parseGitNameStatus(line string) parseGitStatusLine {
+	if line == "" {
+		return parseGitStatusLine{}
+	}
+	
+	parts := strings.Fields(line)
+	if len(parts) < 2 {
+		return parseGitStatusLine{}
+	}
+	
+	status := parts[0]
+	
+	// Handle rename/copy status codes (e.g., "R100", "C75")
+	if len(status) > 1 && (status[0] == 'R' || status[0] == 'C') {
+		// For rename/copy, we expect: "R100 oldname newname" or "C75 oldname newname"
+		if len(parts) >= 3 {
+			// For renames/copies, both old and new filenames need to be checked
+			oldFile := parts[1]
+			newFile := strings.Join(parts[2:], " ") // Handle spaces in new filename
+			return parseGitStatusLine{
+				status:    status,
+				filenames: []string{oldFile, newFile},
+			}
+		}
+	}
+	
+	// Handle regular status codes (M, A, D, etc.)
+	filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
+	return parseGitStatusLine{
+		status:    status,
+		filenames: []string{filename},
+	}
+}
+
+// processGitStatusOutput processes git diff --name-status output and returns filtered results
+func processGitStatusOutput(nameStatusOutput string, returnFilenames bool) ([]string, []string) {
 	if nameStatusOutput == "" {
-		return ""
+		return nil, nil
 	}
 	
 	lines := strings.Split(strings.TrimSpace(nameStatusOutput), "\n")
 	var filteredLines []string
+	var nonBinaryFiles []string
 	
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
 		
-		// Parse git diff --name-status format (e.g., "M filename" or "A filename")
-		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
-			if !utils.IsBinaryFile(filename) {
-				filteredLines = append(filteredLines, line)
+		parsed := parseGitNameStatus(line)
+		if len(parsed.filenames) == 0 {
+			continue
+		}
+		
+		// Check if any of the filenames are binary
+		hasBinaryFile := false
+		for _, filename := range parsed.filenames {
+			if utils.IsBinaryFile(filename) {
+				hasBinaryFile = true
+				break
+			}
+		}
+		
+		// If no binary files found, include this line/files
+		if !hasBinaryFile {
+			filteredLines = append(filteredLines, line)
+			if returnFilenames {
+				nonBinaryFiles = append(nonBinaryFiles, parsed.filenames...)
 			}
 		}
 	}
+	
+	return filteredLines, nonBinaryFiles
+}
+
+// filterBinaryFiles filters out binary files from git diff --name-status output
+func filterBinaryFiles(nameStatusOutput string) string {
+	filteredLines, _ := processGitStatusOutput(nameStatusOutput, false)
 	
 	if len(filteredLines) == 0 {
 		return ""
@@ -55,29 +118,9 @@ func filterBinaryFiles(nameStatusOutput string) string {
 
 // extractNonBinaryFiles extracts non-binary filenames from git diff --name-status output
 func extractNonBinaryFiles(nameStatusOutput string) []string {
-	if nameStatusOutput == "" {
-		return nil
-	}
-	
-	lines := strings.Split(strings.TrimSpace(nameStatusOutput), "\n")
-	var nonBinaryFiles []string
-	
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		
-		// Parse git diff --name-status format (e.g., "M filename" or "A filename")
-		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
-			if !utils.IsBinaryFile(filename) {
-				nonBinaryFiles = append(nonBinaryFiles, filename)
-			}
-		}
-	}
-	
+	_, nonBinaryFiles := processGitStatusOutput(nameStatusOutput, true)
 	return nonBinaryFiles
+}
 }
 
 // GetChanges retrieves all Git changes including staged, unstaged, and untracked files

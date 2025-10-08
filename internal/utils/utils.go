@@ -24,7 +24,7 @@ func IsTextFile(filename string) bool {
 		".ts", ".tsx", ".jsx", ".php", ".rb", ".rs", ".dart", ".sql", ".r",
 		".scala", ".kt", ".swift", ".m", ".pl", ".lua", ".vim", ".csv", 
 		".log", ".cfg", ".conf", ".ini", ".toml", ".lock", ".gitignore",
-		".dockerfile", ".makefile", ".cmake", ".pro", ".pri",
+		".dockerfile", ".makefile", ".cmake", ".pro", ".pri", ".svg",
 	}
 
 	ext := strings.ToLower(filepath.Ext(filename))
@@ -34,6 +34,12 @@ func IsTextFile(filename string) bool {
 		}
 	}
 
+	// Files without extensions (like README, Dockerfile, Makefile) are treated as text
+	// This ensures consistent behavior for common configuration and documentation files
+	if ext == "" {
+		return true
+	}
+
 	return false
 }
 
@@ -41,8 +47,8 @@ func IsTextFile(filename string) bool {
 func IsBinaryFile(filename string) bool {
 	// List of common binary file extensions
 	binaryExtensions := []string{
-		// Images
-		".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".svg", ".ico", ".webp",
+		// Images (excluding SVG which is XML text)
+		".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".ico", ".webp",
 		// Audio/Video
 		".mp3", ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".wav", ".ogg", ".m4a",
 		// Archives/Compressed
@@ -65,6 +71,8 @@ func IsBinaryFile(filename string) bool {
 		}
 	}
 
+	// Note: Files with unknown extensions are not considered binary by default
+	// This allows them to be processed as text files for diff analysis
 	return false
 }
 
