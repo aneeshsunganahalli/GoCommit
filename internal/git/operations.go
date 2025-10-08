@@ -121,7 +121,6 @@ func extractNonBinaryFiles(nameStatusOutput string) []string {
 	_, nonBinaryFiles := processGitStatusOutput(nameStatusOutput, true)
 	return nonBinaryFiles
 }
-}
 
 // GetChanges retrieves all Git changes including staged, unstaged, and untracked files
 func GetChanges(config *types.RepoConfig) (string, error) {

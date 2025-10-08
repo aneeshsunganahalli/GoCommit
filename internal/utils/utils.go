@@ -34,10 +34,20 @@ func IsTextFile(filename string) bool {
 		}
 	}
 
-	// Files without extensions (like README, Dockerfile, Makefile) are treated as text
-	// This ensures consistent behavior for common configuration and documentation files
+	// Common extensionless files that are typically text
 	if ext == "" {
-		return true
+		baseName := strings.ToLower(filepath.Base(filename))
+		commonTextFiles := []string{
+			"readme", "dockerfile", "makefile", "rakefile", "gemfile", 
+			"procfile", "jenkinsfile", "vagrantfile", "changelog", "authors",
+			"contributors", "copying", "install", "news", "todo",
+		}
+		
+		for _, textFile := range commonTextFiles {
+			if baseName == textFile {
+				return true
+			}
+		}
 	}
 
 	return false
