@@ -209,21 +209,36 @@ interactionLoop:
 	pterm.Println()
 	display.ShowChangesPreview(fileStats)
 
-	// After message generation succeeds:
+	// Auto-commit if flag is set (cross-platform compatible)
 	if autoCommit && !dryRun {
-		fmt.Println("\n🚀 Automatically committing with generated message...")
-
-		cmd := exec.Command("git", "commit", "-m", finalMessage)
-		cmd.Dir = currentDir // set to your git repo path
-
-		output, err := cmd.CombinedOutput()
+		pterm.Println()
+		spinner, err := pterm.DefaultSpinner.
+			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
+			Start("Automatically committing with generated message...")
 		if err != nil {
-			fmt.Printf("❌ Failed to commit: %v\n%s\n", err, output)
+			pterm.Error.Printf("Failed to start spinner: %v\n", err)
 			return
 		}
 
-		fmt.Println("✅ Committed successfully!")
-		fmt.Println(string(output))
+		cmd := exec.Command("git", "commit", "-m", finalMessage)
+		cmd.Dir = currentDir
+		// Ensure git command works across all platforms
+		cmd.Env = os.Environ()
+
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			spinner.Fail("Commit failed")
+			pterm.Error.Printf("Failed to commit: %v\n", err)
+			if len(output) > 0 {
+				pterm.Error.Println(string(output))
+			}
+			return
+		}
+
+		spinner.Success("Committed successfully!")
+		if len(output) > 0 {
+			pterm.Info.Println(strings.TrimSpace(string(output)))
+		}
 	}
 }
 
