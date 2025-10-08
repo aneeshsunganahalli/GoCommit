@@ -27,7 +27,7 @@ import (
 // CreateCommitMsg launches the interactive flow for reviewing, regenerating,
 // editing, and accepting AI-generated commit messages in the current repo.
 // If dryRun is true, it displays the prompt without making an API call.
-func CreateCommitMsg(dryRun bool) {
+func CreateCommitMsg(dryRun bool, autoCommit bool) {
 	// Validate COMMIT_LLM and required API keys
 	useLLM, err := store.DefaultLLMKey()
 	if err != nil {
@@ -208,6 +208,23 @@ interactionLoop:
 
 	pterm.Println()
 	display.ShowChangesPreview(fileStats)
+
+	// After message generation succeeds:
+	if autoCommit && !dryRun {
+		fmt.Println("\n🚀 Automatically committing with generated message...")
+
+		cmd := exec.Command("git", "commit", "-m", finalMessage)
+		cmd.Dir = currentDir // set to your git repo path
+
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("❌ Failed to commit: %v\n%s\n", err, output)
+			return
+		}
+
+		fmt.Println("✅ Committed successfully!")
+		fmt.Println(string(output))
+	}
 }
 
 type styleOption struct {
@@ -234,6 +251,7 @@ var (
 	}
 	errSelectionCancelled = errors.New("selection cancelled")
 )
+
 // resolveOllamaConfig returns the URL and model for Ollama, using environment variables as fallbacks
 func resolveOllamaConfig(apiKey string) (url, model string) {
 	url = apiKey
@@ -249,7 +267,6 @@ func resolveOllamaConfig(apiKey string) (url, model string) {
 	}
 	return url, model
 }
-
 
 func generateMessage(provider types.LLMProvider, config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	switch provider {
