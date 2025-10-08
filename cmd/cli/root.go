@@ -53,7 +53,10 @@ var creatCommitMsg = &cobra.Command{
 	Use:   ".",
 	Short: "Create Commit Message",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		dryRun, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			return err
+		}
 		CreateCommitMsg(dryRun)
 		return nil
 	},
