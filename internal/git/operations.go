@@ -35,7 +35,8 @@ func parseGitNameStatus(line string) parseGitStatusLine {
 		return parseGitStatusLine{}
 	}
 	
-	parts := strings.Fields(line)
+	// Git uses tabs to separate fields in --name-status output
+	parts := strings.Split(line, "\t")
 	if len(parts) < 2 {
 		return parseGitStatusLine{}
 	}
@@ -44,11 +45,11 @@ func parseGitNameStatus(line string) parseGitStatusLine {
 	
 	// Handle rename/copy status codes (e.g., "R100", "C75")
 	if len(status) > 1 && (status[0] == 'R' || status[0] == 'C') {
-		// For rename/copy, we expect: "R100 oldname newname" or "C75 oldname newname"
+		// For rename/copy, we expect: "R100\toldname\tnewname" or "C75\toldname\tnewname"
 		if len(parts) >= 3 {
 			// For renames/copies, both old and new filenames need to be checked
 			oldFile := parts[1]
-			newFile := strings.Join(parts[2:], " ") // Handle spaces in new filename
+			newFile := parts[2]
 			return parseGitStatusLine{
 				status:    status,
 				filenames: []string{oldFile, newFile},
@@ -57,7 +58,7 @@ func parseGitNameStatus(line string) parseGitStatusLine {
 	}
 	
 	// Handle regular status codes (M, A, D, etc.)
-	filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
+	filename := parts[1]
 	return parseGitStatusLine{
 		status:    status,
 		filenames: []string{filename},
