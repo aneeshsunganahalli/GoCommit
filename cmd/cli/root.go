@@ -57,7 +57,12 @@ var creatCommitMsg = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		CreateCommitMsg(dryRun)
+
+		autoCommit, err := cmd.Flags().GetBool("auto")
+		if err != nil {
+			return err
+		}
+		CreateCommitMsg(dryRun, autoCommit)
 		return nil
 	},
 }
