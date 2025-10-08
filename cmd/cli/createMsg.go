@@ -234,6 +234,22 @@ var (
 	}
 	errSelectionCancelled = errors.New("selection cancelled")
 )
+// resolveOllamaConfig returns the URL and model for Ollama, using environment variables as fallbacks
+func resolveOllamaConfig(apiKey string) (url, model string) {
+	url = apiKey
+	if strings.TrimSpace(url) == "" {
+		url = os.Getenv("OLLAMA_URL")
+		if url == "" {
+			url = "http://localhost:11434/api/generate"
+		}
+	}
+	model = os.Getenv("OLLAMA_MODEL")
+	if model == "" {
+		model = "llama3.1"
+	}
+	return url, model
+}
+
 
 func generateMessage(provider types.LLMProvider, config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
 	switch provider {
@@ -246,17 +262,7 @@ func generateMessage(provider types.LLMProvider, config *types.Config, changes s
 	case types.ProviderGroq:
 		return groq.GenerateCommitMessage(config, changes, apiKey, opts)
 	case types.ProviderOllama:
-		url := apiKey
-		if strings.TrimSpace(url) == "" {
-			url = os.Getenv("OLLAMA_URL")
-			if url == "" {
-				url = "http://localhost:11434/api/generate"
-			}
-		}
-		model := os.Getenv("OLLAMA_MODEL")
-		if model == "" {
-			model = "llama3.1"
-		}
+		url, model := resolveOllamaConfig(apiKey)
 		return ollama.GenerateCommitMessage(config, changes, url, model, opts)
 	default:
 		return grok.GenerateCommitMessage(config, changes, apiKey, opts)
@@ -454,17 +460,7 @@ func displayDryRunInfo(provider types.LLMProvider, config *types.Config, changes
 	// Add provider-specific info
 	switch provider {
 	case types.ProviderOllama:
-		url := apiKey
-		if strings.TrimSpace(url) == "" {
-			url = os.Getenv("OLLAMA_URL")
-			if url == "" {
-				url = "http://localhost:11434/api/generate"
-			}
-		}
-		model := os.Getenv("OLLAMA_MODEL")
-		if model == "" {
-			model = "llama3.1"
-		}
+		url, model := resolveOllamaConfig(apiKey)
 		providerInfo = append(providerInfo, []string{"Ollama URL", url})
 		providerInfo = append(providerInfo, []string{"Model", model})
 	case types.ProviderGrok:
@@ -514,6 +510,10 @@ func displayDryRunInfo(provider types.LLMProvider, config *types.Config, changes
 func maskAPIKey(apiKey string) string {
 	if len(apiKey) == 0 {
 		return "[NOT SET]"
+	}
+	// Don't mask URLs (used by Ollama)
+	if strings.HasPrefix(apiKey, "http://") || strings.HasPrefix(apiKey, "https://") {
+		return apiKey
 	}
 	if len(apiKey) <= 8 {
 		return strings.Repeat("*", len(apiKey))
