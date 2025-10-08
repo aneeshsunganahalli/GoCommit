@@ -76,6 +76,9 @@ func init() {
 	// Add --dry-run flag to the commit command
 	creatCommitMsg.Flags().Bool("dry-run", false, "Preview the prompt that would be sent to the LLM without making an API call")
 
+	// Add --auto flag to the commid command
+	creatCommitMsg.Flags().Bool("auto", false, "Automatically commit with the generated message")
+
 	rootCmd.AddCommand(creatCommitMsg)
 	rootCmd.AddCommand(llmCmd)
 	llmCmd.AddCommand(llmSetupCmd)
