@@ -63,8 +63,8 @@ func CreateCommitMsg() {
 	}
 
 	pterm.DefaultHeader.WithFullWidth().
-		WithBackgroundStyle(pterm.NewStyle(pterm.BgDarkGray)).
-		WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgCyan)).
+		WithTextStyle(pterm.NewStyle(pterm.FgBlack, pterm.Bold)).
 		Println("Commit Message Generator")
 
 	pterm.Println()
