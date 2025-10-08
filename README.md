@@ -134,6 +134,36 @@ Perfect for:
 - 🔒 **Privacy** - Verify what data would be shared with external APIs
 - 🧪 **Development** - Test prompt changes without API calls
 
+### Auto Commit Mode
+
+Automatically commit with the generated message without manual confirmation:
+
+```bash
+commit . --auto
+```
+
+This will:
+- Generate the commit message using your configured LLM
+- Automatically execute `git commit` with the generated message
+- Skip the interactive review and manual confirmation step
+
+**Note**: The `--auto` flag cannot be combined with `--dry-run`. Dry run mode takes precedence and will only preview without committing.
+
+**Platform Support**: Works on Linux, macOS, and Windows.
+
+### Combining Flags
+
+```bash
+# Preview only (no commit, no API call)
+commit . --dry-run
+
+# Generate and auto-commit
+commit . --auto
+
+# Generate with interactive review (default behavior)
+commit .
+```
+
 ### Setup LLM and API Key
 
 ```bash
