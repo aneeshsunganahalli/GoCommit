@@ -29,13 +29,14 @@ Looking to contribute? Check out:
 
 ✨ **AI-Powered Commit Messages** - Automatically generate meaningful commit messages  
 🔄 **Multiple LLM Support** - Choose between Google Gemini, Grok, Claude, ChatGPT, or Ollama (local)  
+🧪 **Dry Run Mode** - Preview prompts without making API calls  
 📝 **Context-Aware** - Analyzes staged and unstaged changes  
 📋 **Auto-Copy to Clipboard** - Generated messages are automatically copied for instant use  
 🎛️ **Interactive Review Flow** - Accept, regenerate with new styles, or open the message in your editor before committing  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
-🔒 **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
+💡 **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
 🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
-⚡ **Fast** - Quick generation of commit messages//img.shields.io/badge/Hacktoberfest-2025-orange.
+⚡️ **Fast** - Quick generation of commit messages
 
 ## Supported LLM Providers
 
@@ -111,6 +112,27 @@ Or if running from source:
 ```bash
 go run cmd/commit-msg/main.go .
 ```
+
+### Preview Mode (Dry Run)
+
+Preview what would be sent to the LLM without making an API call:
+
+```bash
+commit . --dry-run
+```
+
+This displays:
+- The LLM provider that would be used
+- The exact prompt that would be sent
+- File statistics and change summary
+- Estimated token count
+- All without consuming API credits or sharing data
+
+Perfect for:
+- 🐛 **Debugging** - See exactly what prompt is being sent
+- 💰 **Cost Control** - Review before consuming API credits
+- 🔒 **Privacy** - Verify what data would be shared with external APIs
+- 🧪 **Development** - Test prompt changes without API calls
 
 ### Setup LLM and API Key
 

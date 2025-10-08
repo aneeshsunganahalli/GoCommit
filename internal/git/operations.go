@@ -22,6 +22,64 @@ func IsRepository(path string) bool {
 	return strings.TrimSpace(string(output)) == "true"
 }
 
+// filterBinaryFiles filters out binary files from git diff --name-status output
+func filterBinaryFiles(nameStatusOutput string) string {
+	if nameStatusOutput == "" {
+		return ""
+	}
+	
+	lines := strings.Split(strings.TrimSpace(nameStatusOutput), "\n")
+	var filteredLines []string
+	
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		
+		// Parse git diff --name-status format (e.g., "M filename" or "A filename")
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
+			if !utils.IsBinaryFile(filename) {
+				filteredLines = append(filteredLines, line)
+			}
+		}
+	}
+	
+	if len(filteredLines) == 0 {
+		return ""
+	}
+	
+	return strings.Join(filteredLines, "\n")
+}
+
+// extractNonBinaryFiles extracts non-binary filenames from git diff --name-status output
+func extractNonBinaryFiles(nameStatusOutput string) []string {
+	if nameStatusOutput == "" {
+		return nil
+	}
+	
+	lines := strings.Split(strings.TrimSpace(nameStatusOutput), "\n")
+	var nonBinaryFiles []string
+	
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		
+		// Parse git diff --name-status format (e.g., "M filename" or "A filename")
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			filename := strings.Join(parts[1:], " ") // Handle filenames with spaces
+			if !utils.IsBinaryFile(filename) {
+				nonBinaryFiles = append(nonBinaryFiles, filename)
+			}
+		}
+	}
+	
+	return nonBinaryFiles
+}
+
 // GetChanges retrieves all Git changes including staged, unstaged, and untracked files
 func GetChanges(config *types.RepoConfig) (string, error) {
 	var changes strings.Builder
@@ -34,20 +92,29 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 	}
 
 	if len(output) > 0 {
-		changes.WriteString("Unstaged changes:\n")
-		changes.WriteString(string(output))
-		changes.WriteString("\n\n")
+		// Filter out binary files from the name-status output
+		filteredOutput := filterBinaryFiles(string(output))
+		
+		if filteredOutput != "" {
+			changes.WriteString("Unstaged changes:\n")
+			changes.WriteString(filteredOutput)
+			changes.WriteString("\n\n")
 
-		// Get the content of these changes
-		diffCmd := exec.Command("git", "-C", config.Path, "diff")
-		diffOutput, err := diffCmd.Output()
-		if err != nil {
-			return "", fmt.Errorf("git diff content failed: %v", err)
+			// Get the content of these changes (only for non-binary files)
+			nonBinaryFiles := extractNonBinaryFiles(string(output))
+			if len(nonBinaryFiles) > 0 {
+				diffCmd := exec.Command("git", "-C", config.Path, "diff", "--")
+				diffCmd.Args = append(diffCmd.Args, nonBinaryFiles...)
+				diffOutput, err := diffCmd.Output()
+				if err != nil {
+					return "", fmt.Errorf("git diff content failed: %v", err)
+				}
+
+				changes.WriteString("Unstaged diff content:\n")
+				changes.WriteString(string(diffOutput))
+				changes.WriteString("\n\n")
+			}
 		}
-
-		changes.WriteString("Unstaged diff content:\n")
-		changes.WriteString(string(diffOutput))
-		changes.WriteString("\n\n")
 	}
 
 	// 2. Check for staged changes
@@ -58,20 +125,29 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 	}
 
 	if len(stagedOutput) > 0 {
-		changes.WriteString("Staged changes:\n")
-		changes.WriteString(string(stagedOutput))
-		changes.WriteString("\n\n")
+		// Filter out binary files from the staged changes
+		filteredStagedOutput := filterBinaryFiles(string(stagedOutput))
+		
+		if filteredStagedOutput != "" {
+			changes.WriteString("Staged changes:\n")
+			changes.WriteString(filteredStagedOutput)
+			changes.WriteString("\n\n")
 
-		// Get the content of these changes
-		stagedDiffCmd := exec.Command("git", "-C", config.Path, "diff", "--cached")
-		stagedDiffOutput, err := stagedDiffCmd.Output()
-		if err != nil {
-			return "", fmt.Errorf("git diff --cached content failed: %v", err)
+			// Get the content of these changes (only for non-binary files)
+			nonBinaryStagedFiles := extractNonBinaryFiles(string(stagedOutput))
+			if len(nonBinaryStagedFiles) > 0 {
+				stagedDiffCmd := exec.Command("git", "-C", config.Path, "diff", "--cached", "--")
+				stagedDiffCmd.Args = append(stagedDiffCmd.Args, nonBinaryStagedFiles...)
+				stagedDiffOutput, err := stagedDiffCmd.Output()
+				if err != nil {
+					return "", fmt.Errorf("git diff --cached content failed: %v", err)
+				}
+
+				changes.WriteString("Staged diff content:\n")
+				changes.WriteString(string(stagedDiffOutput))
+				changes.WriteString("\n\n")
+			}
 		}
-
-		changes.WriteString("Staged diff content:\n")
-		changes.WriteString(string(stagedDiffOutput))
-		changes.WriteString("\n\n")
 	}
 
 	// 3. Check for untracked files
@@ -82,34 +158,44 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 	}
 
 	if len(untrackedOutput) > 0 {
-		changes.WriteString("Untracked files:\n")
-		changes.WriteString(string(untrackedOutput))
-		changes.WriteString("\n\n")
-
-		// Try to get content of untracked files (limited to text files and smaller size)
+		// Filter out binary files from untracked files
 		untrackedFiles := strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
+		var nonBinaryUntrackedFiles []string
+		
 		for _, file := range untrackedFiles {
 			if file == "" {
 				continue
 			}
+			if !utils.IsBinaryFile(file) {
+				nonBinaryUntrackedFiles = append(nonBinaryUntrackedFiles, file)
+			}
+		}
+		
+		if len(nonBinaryUntrackedFiles) > 0 {
+			changes.WriteString("Untracked files:\n")
+			changes.WriteString(strings.Join(nonBinaryUntrackedFiles, "\n"))
+			changes.WriteString("\n\n")
 
-			fullPath := filepath.Join(config.Path, file)
-			if utils.IsTextFile(fullPath) && utils.IsSmallFile(fullPath) {
-				fileContent, err := os.ReadFile(fullPath)
-				if err != nil {
-					// Log but don't fail - untracked file may have been deleted or is inaccessible
-					continue
-				}
-				changes.WriteString(fmt.Sprintf("Content of new file %s:\n", file))
+			// Try to get content of untracked files (limited to text files and smaller size)
+			for _, file := range nonBinaryUntrackedFiles {
+				fullPath := filepath.Join(config.Path, file)
+				if utils.IsTextFile(fullPath) && utils.IsSmallFile(fullPath) {
+					fileContent, err := os.ReadFile(fullPath)
+					if err != nil {
+						// Log but don't fail - untracked file may have been deleted or is inaccessible
+						continue
+					}
+					changes.WriteString(fmt.Sprintf("Content of new file %s:\n", file))
 
-				// Use special scrubbing for .env files
-				if strings.HasSuffix(strings.ToLower(file), ".env") ||
-					strings.Contains(strings.ToLower(file), ".env.") {
-					changes.WriteString(scrubber.ScrubEnvFile(string(fileContent)))
-				} else {
-					changes.WriteString(string(fileContent))
+					// Use special scrubbing for .env files
+					if strings.HasSuffix(strings.ToLower(file), ".env") ||
+						strings.Contains(strings.ToLower(file), ".env.") {
+						changes.WriteString(scrubber.ScrubEnvFile(string(fileContent)))
+					} else {
+						changes.WriteString(string(fileContent))
+					}
+					changes.WriteString("\n\n")
 				}
-				changes.WriteString("\n\n")
 			}
 		}
 	}
