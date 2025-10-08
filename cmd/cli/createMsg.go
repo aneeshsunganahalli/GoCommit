@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,14 +11,9 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/dfanso/commit-msg/cmd/cli/store"
-	"github.com/dfanso/commit-msg/internal/chatgpt"
-	"github.com/dfanso/commit-msg/internal/claude"
 	"github.com/dfanso/commit-msg/internal/display"
-	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
-	"github.com/dfanso/commit-msg/internal/grok"
-	"github.com/dfanso/commit-msg/internal/groq"
-	"github.com/dfanso/commit-msg/internal/ollama"
+	"github.com/dfanso/commit-msg/internal/llm"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
 	"github.com/google/shlex"
@@ -102,6 +98,17 @@ func CreateCommitMsg(dryRun bool, autoCommit bool) {
 		return
 	}
 
+	ctx := context.Background()
+
+	providerInstance, err := llm.NewProvider(commitLLM, llm.ProviderOptions{
+		Credential: apiKey,
+		Config:     config,
+	})
+	if err != nil {
+		displayProviderError(commitLLM, err)
+		os.Exit(1)
+	}
+
 	pterm.Println()
 	spinnerGenerating, err := pterm.DefaultSpinner.
 		WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
@@ -112,7 +119,7 @@ func CreateCommitMsg(dryRun bool, autoCommit bool) {
 	}
 
 	attempt := 1
-	commitMsg, err := generateMessage(commitLLM, config, changes, apiKey, withAttempt(nil, attempt))
+	commitMsg, err := generateMessage(ctx, providerInstance, changes, withAttempt(nil, attempt))
 	if err != nil {
 		spinnerGenerating.Fail("Failed to generate commit message")
 		displayProviderError(commitLLM, err)
@@ -174,7 +181,7 @@ interactionLoop:
 				pterm.Error.Printf("Failed to start spinner: %v\n", err)
 				continue
 			}
-			updatedMessage, genErr := generateMessage(commitLLM, config, changes, apiKey, generationOpts)
+			updatedMessage, genErr := generateMessage(ctx, providerInstance, changes, generationOpts)
 			if genErr != nil {
 				spinner.Fail("Regeneration failed")
 				displayProviderError(commitLLM, genErr)
@@ -283,22 +290,8 @@ func resolveOllamaConfig(apiKey string) (url, model string) {
 	return url, model
 }
 
-func generateMessage(provider types.LLMProvider, config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
-	switch provider {
-	case types.ProviderGemini:
-		return gemini.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderOpenAI:
-		return chatgpt.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderClaude:
-		return claude.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderGroq:
-		return groq.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderOllama:
-		url, model := resolveOllamaConfig(apiKey)
-		return ollama.GenerateCommitMessage(config, changes, url, model, opts)
-	default:
-		return grok.GenerateCommitMessage(config, changes, apiKey, opts)
-	}
+func generateMessage(ctx context.Context, provider llm.Provider, changes string, opts *types.GenerationOptions) (string, error) {
+	return provider.Generate(ctx, changes, opts)
 }
 
 func promptActionSelection() (string, error) {
@@ -456,6 +449,11 @@ func withAttempt(styleOpts *types.GenerationOptions, attempt int) *types.Generat
 }
 
 func displayProviderError(provider types.LLMProvider, err error) {
+	if errors.Is(err, llm.ErrMissingCredential) {
+		displayMissingCredentialHint(provider)
+		return
+	}
+
 	switch provider {
 	case types.ProviderGemini:
 		pterm.Error.Printf("Gemini API error: %v. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n", err)
@@ -467,8 +465,29 @@ func displayProviderError(provider types.LLMProvider, err error) {
 		pterm.Error.Printf("Groq API error: %v. Check your GROQ_API_KEY environment variable or run: commit llm setup\n", err)
 	case types.ProviderGrok:
 		pterm.Error.Printf("Grok API error: %v. Check your GROK_API_KEY environment variable or run: commit llm setup\n", err)
+	case types.ProviderOllama:
+		pterm.Error.Printf("Ollama error: %v. Verify the Ollama service URL or run: commit llm setup\n", err)
 	default:
-		pterm.Error.Printf("LLM API error: %v\n", err)
+		pterm.Error.Printf("LLM error: %v\n", err)
+	}
+}
+
+func displayMissingCredentialHint(provider types.LLMProvider) {
+	switch provider {
+	case types.ProviderGemini:
+		pterm.Error.Println("Gemini requires an API key. Run: commit llm setup or set GEMINI_API_KEY.")
+	case types.ProviderOpenAI:
+		pterm.Error.Println("OpenAI requires an API key. Run: commit llm setup or set OPENAI_API_KEY.")
+	case types.ProviderClaude:
+		pterm.Error.Println("Claude requires an API key. Run: commit llm setup or set CLAUDE_API_KEY.")
+	case types.ProviderGroq:
+		pterm.Error.Println("Groq requires an API key. Run: commit llm setup or set GROQ_API_KEY.")
+	case types.ProviderGrok:
+		pterm.Error.Println("Grok requires an API key. Run: commit llm setup or set GROK_API_KEY.")
+	case types.ProviderOllama:
+		pterm.Error.Println("Ollama requires a reachable service URL. Run: commit llm setup or set OLLAMA_URL.")
+	default:
+		pterm.Error.Printf("%s is missing credentials. Run: commit llm setup.\n", provider)
 	}
 }
 
