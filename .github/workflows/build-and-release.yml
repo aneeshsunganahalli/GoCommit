@@ -41,14 +41,38 @@ jobs:
           echo "New tag: ${{ steps.tag_version.outputs.new_tag }}"
           echo "Tag created: ${{ steps.tag_version.outputs.new_tag != '' }}"
 
+  test:
+    name: Test
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: auto-tag
+    # Always run tests, even if auto-tag was skipped
+    if: always() && (needs.auto-tag.result == 'success' || needs.auto-tag.result == 'skipped')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'  # Use the appropriate Go version for your project
+
+      - name: Get dependencies
+        run: go mod download
+        
+      - name: Run tests
+        run: go test -v ./...
+
   build:
     name: Build Go Binary
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    needs: auto-tag
-    # Always run build, even if auto-tag was skipped (e.g., for tag pushes)
-    if: always() && (needs.auto-tag.result == 'success' || needs.auto-tag.result == 'skipped')
+    needs: [auto-tag, test]
+    # Only build if tests passed
+    if: always() && (needs.auto-tag.result == 'success' || needs.auto-tag.result == 'skipped') && needs.test.result == 'success'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
