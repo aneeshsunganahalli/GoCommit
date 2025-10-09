@@ -18,7 +18,7 @@ type StoreMethods struct {
 	ring keyring.Keyring
 }
 
-//Initializes Keyring instance
+// Initializes Keyring instance
 func KeyringInit() (*StoreMethods, error) {
 	ring, err := keyring.Open(keyring.Config{
 		ServiceName: "commit-msg",
@@ -69,7 +69,9 @@ func (s *StoreMethods) Save(LLMConfig LLMProvider) error {
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return err
+			// If unmarshal fails, it might be due to old config format
+			// Reset to empty config to allow fresh setup
+			return fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	}
 
@@ -135,7 +137,8 @@ func (s *StoreMethods) DefaultLLMKey() (*LLMProvider, error) {
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return nil, err
+			// If unmarshal fails, it might be due to old config format
+			return nil, fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	} else {
 		return nil, errors.New("config file is empty, Please add at least one LLM Key")
@@ -180,7 +183,8 @@ func ListSavedModels() (*Config, error) {
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return nil, err
+			// If unmarshal fails, it might be due to old config format
+			return nil, fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	} else {
 		return nil, errors.New("config file is empty, Please add at least one LLM Key")
@@ -213,7 +217,8 @@ func ChangeDefault(Model types.LLMProvider) error {
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return err
+			// If unmarshal fails, it might be due to old config format
+			return fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	}
 
@@ -262,7 +267,8 @@ func (s *StoreMethods) DeleteModel(Model types.LLMProvider) error {
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return err
+			// If unmarshal fails, it might be due to old config format
+			return fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	}
 
@@ -323,7 +329,8 @@ func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) erro
 	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
-			return err
+			// If unmarshal fails, it might be due to old config format
+			return fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	}
 
