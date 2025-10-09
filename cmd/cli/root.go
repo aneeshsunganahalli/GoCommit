@@ -14,6 +14,16 @@ var rootCmd = &cobra.Command{
 	Use:   "commit",
 	Short: "CLI tool to write commit message",
 	Long:  `Write a commit message with AI of your choice`,
+	Example: `
+	# Generate a commit message and run the interactive review flow
+	commit .
+
+	# Preview what would be sent to the LLM without making an API call
+	commit . --dry-run
+
+	# Generate a commit message and automatically commit it
+	commit . --auto
+`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -78,11 +88,9 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	// Add --dry-run flag to the commit command
-	creatCommitMsg.Flags().Bool("dry-run", false, "Preview the prompt that would be sent to the LLM without making an API call")
-
-	// Add --auto flag to the commid command
-	creatCommitMsg.Flags().Bool("auto", false, "Automatically commit with the generated message")
+	// Add --dry-run and --auto as persistent flags so they show in top-level help
+	rootCmd.PersistentFlags().Bool("dry-run", false, "Preview the prompt that would be sent to the LLM without making an API call")
+	rootCmd.PersistentFlags().Bool("auto", false, "Automatically commit with the generated message")
 
 	rootCmd.AddCommand(creatCommitMsg)
 	rootCmd.AddCommand(llmCmd)
