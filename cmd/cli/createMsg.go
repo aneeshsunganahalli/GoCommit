@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,14 +11,9 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/dfanso/commit-msg/cmd/cli/store"
-	"github.com/dfanso/commit-msg/internal/chatgpt"
-	"github.com/dfanso/commit-msg/internal/claude"
 	"github.com/dfanso/commit-msg/internal/display"
-	"github.com/dfanso/commit-msg/internal/gemini"
 	"github.com/dfanso/commit-msg/internal/git"
-	"github.com/dfanso/commit-msg/internal/grok"
-	"github.com/dfanso/commit-msg/internal/groq"
-	"github.com/dfanso/commit-msg/internal/ollama"
+	"github.com/dfanso/commit-msg/internal/llm"
 	"github.com/dfanso/commit-msg/internal/stats"
 	"github.com/dfanso/commit-msg/pkg/types"
 	"github.com/google/shlex"
@@ -26,7 +22,8 @@ import (
 
 // CreateCommitMsg launches the interactive flow for reviewing, regenerating,
 // editing, and accepting AI-generated commit messages in the current repo.
-func CreateCommitMsg() {
+// If dryRun is true, it displays the prompt without making an API call.
+func CreateCommitMsg(dryRun bool, autoCommit bool) {
 	// Validate COMMIT_LLM and required API keys
 	useLLM, err := store.DefaultLLMKey()
 	if err != nil {
@@ -94,6 +91,24 @@ func CreateCommitMsg() {
 		return
 	}
 
+	// Handle dry-run mode: display what would be sent to LLM without making API call
+	if dryRun {
+		pterm.Println()
+		displayDryRunInfo(commitLLM, config, changes, apiKey)
+		return
+	}
+
+	ctx := context.Background()
+
+	providerInstance, err := llm.NewProvider(commitLLM, llm.ProviderOptions{
+		Credential: apiKey,
+		Config:     config,
+	})
+	if err != nil {
+		displayProviderError(commitLLM, err)
+		os.Exit(1)
+	}
+
 	pterm.Println()
 	spinnerGenerating, err := pterm.DefaultSpinner.
 		WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
@@ -104,7 +119,7 @@ func CreateCommitMsg() {
 	}
 
 	attempt := 1
-	commitMsg, err := generateMessage(commitLLM, config, changes, apiKey, withAttempt(nil, attempt))
+	commitMsg, err := generateMessage(ctx, providerInstance, changes, withAttempt(nil, attempt))
 	if err != nil {
 		spinnerGenerating.Fail("Failed to generate commit message")
 		displayProviderError(commitLLM, err)
@@ -166,7 +181,7 @@ interactionLoop:
 				pterm.Error.Printf("Failed to start spinner: %v\n", err)
 				continue
 			}
-			updatedMessage, genErr := generateMessage(commitLLM, config, changes, apiKey, generationOpts)
+			updatedMessage, genErr := generateMessage(ctx, providerInstance, changes, generationOpts)
 			if genErr != nil {
 				spinner.Fail("Regeneration failed")
 				displayProviderError(commitLLM, genErr)
@@ -200,6 +215,38 @@ interactionLoop:
 
 	pterm.Println()
 	display.ShowChangesPreview(fileStats)
+
+	// Auto-commit if flag is set (cross-platform compatible)
+	if autoCommit && !dryRun {
+		pterm.Println()
+		spinner, err := pterm.DefaultSpinner.
+			WithSequence("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏").
+			Start("Automatically committing with generated message...")
+		if err != nil {
+			pterm.Error.Printf("Failed to start spinner: %v\n", err)
+			return
+		}
+
+		cmd := exec.Command("git", "commit", "-m", finalMessage)
+		cmd.Dir = currentDir
+		// Ensure git command works across all platforms
+		cmd.Env = os.Environ()
+
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			spinner.Fail("Commit failed")
+			pterm.Error.Printf("Failed to commit: %v\n", err)
+			if len(output) > 0 {
+				pterm.Error.Println(string(output))
+			}
+			return
+		}
+
+		spinner.Success("Committed successfully!")
+		if len(output) > 0 {
+			pterm.Info.Println(strings.TrimSpace(string(output)))
+		}
+	}
 }
 
 type styleOption struct {
@@ -227,32 +274,24 @@ var (
 	errSelectionCancelled = errors.New("selection cancelled")
 )
 
-func generateMessage(provider types.LLMProvider, config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
-	switch provider {
-	case types.ProviderGemini:
-		return gemini.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderOpenAI:
-		return chatgpt.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderClaude:
-		return claude.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderGroq:
-		return groq.GenerateCommitMessage(config, changes, apiKey, opts)
-	case types.ProviderOllama:
-		url := apiKey
-		if strings.TrimSpace(url) == "" {
-			url = os.Getenv("OLLAMA_URL")
-			if url == "" {
-				url = "http://localhost:11434/api/generate"
-			}
+// resolveOllamaConfig returns the URL and model for Ollama, using environment variables as fallbacks
+func resolveOllamaConfig(apiKey string) (url, model string) {
+	url = apiKey
+	if strings.TrimSpace(url) == "" {
+		url = os.Getenv("OLLAMA_URL")
+		if url == "" {
+			url = "http://localhost:11434/api/generate"
 		}
-		model := os.Getenv("OLLAMA_MODEL")
-		if model == "" {
-			model = "llama3.1"
-		}
-		return ollama.GenerateCommitMessage(config, changes, url, model, opts)
-	default:
-		return grok.GenerateCommitMessage(config, changes, apiKey, opts)
 	}
+	model = os.Getenv("OLLAMA_MODEL")
+	if model == "" {
+		model = "llama3.1"
+	}
+	return url, model
+}
+
+func generateMessage(ctx context.Context, provider llm.Provider, changes string, opts *types.GenerationOptions) (string, error) {
+	return provider.Generate(ctx, changes, opts)
 }
 
 func promptActionSelection() (string, error) {
@@ -410,6 +449,11 @@ func withAttempt(styleOpts *types.GenerationOptions, attempt int) *types.Generat
 }
 
 func displayProviderError(provider types.LLMProvider, err error) {
+	if errors.Is(err, llm.ErrMissingCredential) {
+		displayMissingCredentialHint(provider)
+		return
+	}
+
 	switch provider {
 	case types.ProviderGemini:
 		pterm.Error.Printf("Gemini API error: %v. Check your GEMINI_API_KEY environment variable or run: commit llm setup\n", err)
@@ -421,7 +465,115 @@ func displayProviderError(provider types.LLMProvider, err error) {
 		pterm.Error.Printf("Groq API error: %v. Check your GROQ_API_KEY environment variable or run: commit llm setup\n", err)
 	case types.ProviderGrok:
 		pterm.Error.Printf("Grok API error: %v. Check your GROK_API_KEY environment variable or run: commit llm setup\n", err)
+	case types.ProviderOllama:
+		pterm.Error.Printf("Ollama error: %v. Verify the Ollama service URL or run: commit llm setup\n", err)
 	default:
-		pterm.Error.Printf("LLM API error: %v\n", err)
+		pterm.Error.Printf("LLM error: %v\n", err)
 	}
+}
+
+func displayMissingCredentialHint(provider types.LLMProvider) {
+	switch provider {
+	case types.ProviderGemini:
+		pterm.Error.Println("Gemini requires an API key. Run: commit llm setup or set GEMINI_API_KEY.")
+	case types.ProviderOpenAI:
+		pterm.Error.Println("OpenAI requires an API key. Run: commit llm setup or set OPENAI_API_KEY.")
+	case types.ProviderClaude:
+		pterm.Error.Println("Claude requires an API key. Run: commit llm setup or set CLAUDE_API_KEY.")
+	case types.ProviderGroq:
+		pterm.Error.Println("Groq requires an API key. Run: commit llm setup or set GROQ_API_KEY.")
+	case types.ProviderGrok:
+		pterm.Error.Println("Grok requires an API key. Run: commit llm setup or set GROK_API_KEY.")
+	case types.ProviderOllama:
+		pterm.Error.Println("Ollama requires a reachable service URL. Run: commit llm setup or set OLLAMA_URL.")
+	default:
+		pterm.Error.Printf("%s is missing credentials. Run: commit llm setup.\n", provider)
+	}
+}
+
+// displayDryRunInfo shows what would be sent to the LLM without making an API call
+func displayDryRunInfo(provider types.LLMProvider, config *types.Config, changes string, apiKey string) {
+	pterm.DefaultHeader.WithFullWidth().
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgBlue)).
+		WithTextStyle(pterm.NewStyle(pterm.FgWhite, pterm.Bold)).
+		Println("DRY RUN MODE - Preview Only")
+
+	pterm.Println()
+	pterm.Info.Println("This is a dry-run. No API call will be made to the LLM provider.")
+	pterm.Println()
+
+	// Display provider information
+	pterm.DefaultSection.Println("LLM Provider Configuration")
+	providerInfo := [][]string{
+		{"Provider", provider.String()},
+	}
+
+	// Add provider-specific info
+	switch provider {
+	case types.ProviderOllama:
+		url, model := resolveOllamaConfig(apiKey)
+		providerInfo = append(providerInfo, []string{"Ollama URL", url})
+		providerInfo = append(providerInfo, []string{"Model", model})
+	case types.ProviderGrok:
+		providerInfo = append(providerInfo, []string{"API Endpoint", config.GrokAPI})
+		providerInfo = append(providerInfo, []string{"API Key", maskAPIKey(apiKey)})
+	default:
+		providerInfo = append(providerInfo, []string{"API Key", maskAPIKey(apiKey)})
+	}
+
+	pterm.DefaultTable.WithHasHeader(false).WithData(providerInfo).Render()
+
+	pterm.Println()
+
+	// Build and display the prompt
+	opts := &types.GenerationOptions{Attempt: 1}
+	prompt := types.BuildCommitPrompt(changes, opts)
+
+	pterm.DefaultSection.Println("Prompt That Would Be Sent")
+	pterm.Println()
+
+	// Display prompt in a box
+	promptBox := pterm.DefaultBox.
+		WithTitle("Full LLM Prompt").
+		WithTitleTopCenter().
+		WithBoxStyle(pterm.NewStyle(pterm.FgCyan))
+	promptBox.Println(prompt)
+
+	pterm.Println()
+
+	// Display changes statistics
+	pterm.DefaultSection.Println("Changes Summary")
+	linesCount := len(strings.Split(changes, "\n"))
+	charsCount := len(changes)
+
+	statsData := [][]string{
+		{"Total Lines", fmt.Sprintf("%d", linesCount)},
+		{"Total Characters", fmt.Sprintf("%d", charsCount)},
+		{"Prompt Size (approx)", fmt.Sprintf("%d tokens", estimateTokens(prompt))},
+	}
+	pterm.DefaultTable.WithHasHeader(false).WithData(statsData).Render()
+
+	pterm.Println()
+	pterm.Success.Println("Dry-run complete. To generate actual commit message, run without --dry-run flag.")
+}
+
+// maskAPIKey masks the API key for display purposes
+func maskAPIKey(apiKey string) string {
+	if len(apiKey) == 0 {
+		return "[NOT SET]"
+	}
+	// Don't mask URLs (used by Ollama)
+	if strings.HasPrefix(apiKey, "http://") || strings.HasPrefix(apiKey, "https://") {
+		return apiKey
+	}
+	if len(apiKey) <= 8 {
+		return strings.Repeat("*", len(apiKey))
+	}
+	// Show first 4 and last 4 characters
+	return apiKey[:4] + strings.Repeat("*", len(apiKey)-8) + apiKey[len(apiKey)-4:]
+}
+
+// estimateTokens provides a rough estimate of token count (1 token ≈ 4 characters)
+func estimateTokens(text string) int {
+	return len(text) / 4
 }

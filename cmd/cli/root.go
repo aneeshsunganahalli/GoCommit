@@ -50,7 +50,16 @@ var creatCommitMsg = &cobra.Command{
 	Use:   ".",
 	Short: "Create Commit Message",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		CreateCommitMsg()
+		dryRun, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			return err
+		}
+
+		autoCommit, err := cmd.Flags().GetBool("auto")
+		if err != nil {
+			return err
+		}
+		CreateCommitMsg(dryRun, autoCommit)
 		return nil
 	},
 }
@@ -65,6 +74,13 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	// Add --dry-run flag to the commit command
+	creatCommitMsg.Flags().Bool("dry-run", false, "Preview the prompt that would be sent to the LLM without making an API call")
+
+	// Add --auto flag to the commid command
+	creatCommitMsg.Flags().Bool("auto", false, "Automatically commit with the generated message")
+
 	rootCmd.AddCommand(creatCommitMsg)
 	rootCmd.AddCommand(llmCmd)
 	llmCmd.AddCommand(llmSetupCmd)
