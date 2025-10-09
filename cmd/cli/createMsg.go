@@ -23,9 +23,9 @@ import (
 // CreateCommitMsg launches the interactive flow for reviewing, regenerating,
 // editing, and accepting AI-generated commit messages in the current repo.
 // If dryRun is true, it displays the prompt without making an API call.
-func CreateCommitMsg(dryRun bool, autoCommit bool) {
+func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 	// Validate COMMIT_LLM and required API keys
-	useLLM, err := store.DefaultLLMKey()
+	useLLM, err := Store.DefaultLLMKey()
 	if err != nil {
 		pterm.Error.Printf("No LLM configured. Run: commit llm setup\n")
 		os.Exit(1)

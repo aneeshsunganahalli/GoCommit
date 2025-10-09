@@ -9,9 +9,11 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
+
+
 // SetupLLM walks the user through selecting an LLM provider and storing the
 // corresponding API key or endpoint configuration.
-func SetupLLM() error {
+func SetupLLM(Store *store.StoreMethods) error {
 
 	providers := types.GetSupportedProviderStrings()
 	prompt := promptui.Select{
@@ -60,7 +62,7 @@ func SetupLLM() error {
 		APIKey: apiKey,
 	}
 
-	err = store.Save(LLMConfig)
+	err = Store.Save(LLMConfig)
 	if err != nil {
 		return err
 	}
@@ -71,7 +73,7 @@ func SetupLLM() error {
 
 // UpdateLLM lets the user switch defaults, rotate API keys, or delete stored
 // LLM provider configurations.
-func UpdateLLM() error {
+func UpdateLLM(Store *store.StoreMethods) error {
 
 	SavedModels, err := store.ListSavedModels()
 	if err != nil {
@@ -88,7 +90,7 @@ func UpdateLLM() error {
 	options2 := []string{"Set Default", "Change URL", "Delete"} //different option for local model
 
 	for _, p := range SavedModels.LLMProviders {
-		models = append(models, p.LLM.String())
+		models = append(models, p.String())
 	}
 
 	prompt := promptui.Select{
@@ -146,7 +148,7 @@ func UpdateLLM() error {
 		if !valid {
 			return fmt.Errorf("invalid LLM provider: %s", model)
 		}
-		err = store.UpdateAPIKey(modelProvider, apiKey)
+		err = Store.UpdateAPIKey(modelProvider, apiKey)
 		if err != nil {
 			return err
 		}
@@ -160,7 +162,7 @@ func UpdateLLM() error {
 		if !valid {
 			return fmt.Errorf("invalid LLM provider: %s", model)
 		}
-		err := store.DeleteModel(modelProvider)
+		err := Store.DeleteModel(modelProvider)
 		if err != nil {
 			return err
 		}
