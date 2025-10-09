@@ -258,7 +258,7 @@ var (
 		},
 		{
 			Name:    "SSH Public Key (ED25519)",
-			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?ed25519[_-]?public[_-]?key|SSH_ED25519_PUBLIC_KEY)\s*[=:]\s*["\']?(ssh-ed25519 [a-zA-Z0-9]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?ed25519[_-]?public[_-]?key|SSH_ED25519_PUBLIC_KEY)\s*[=:]\s*["\']?(ssh-ed25519 [a-zA-Z0-9+/]+ [a-zA-Z0-9._@-]+)["\']?`),
 			Redact:  "${1}=\"[REDACTED_SSH_ED25519_PUBLIC_KEY]\"",
 		},
 		{

@@ -398,28 +398,152 @@ func TestScrubEmailInCredentials(t *testing.T) {
 
 func TestScrubCreditCard(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
+		name     string
+		input    string
+		expected string
 	}{
 		{
-			name:  "Credit card with spaces",
-			input: `card: "4532 1234 5678 9010"`,
+			name:     "Credit card with spaces",
+			input:    "4111 1111 1111 1111",
+			expected: "[REDACTED_CREDIT_CARD]",
 		},
 		{
-			name:  "Credit card with dashes",
-			input: `4532-1234-5678-9010`,
+			name:     "Credit card with dashes",
+			input:    "4111-1111-1111-1111",
+			expected: "[REDACTED_CREDIT_CARD]",
 		},
 		{
-			name:  "Credit card no separators",
-			input: `4532123456789010`,
+			name:     "Credit card no separators",
+			input:    "4111111111111111",
+			expected: "[REDACTED_CREDIT_CARD]",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ScrubDiff(tt.input)
-			if strings.Contains(result, "4532") && strings.Contains(result, "9010") {
+			if !strings.Contains(result, "[REDACTED_CREDIT_CARD]") {
 				t.Errorf("ScrubDiff() failed to redact credit card.\nInput: %s\nOutput: %s", tt.input, result)
+			}
+		})
+	}
+}
+
+func TestScrubAzureCredentials(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "Azure Client Secret",
+			input: `AZURE_CLIENT_SECRET="abc123def456ghi789jkl012mno345pqr"`,
+		},
+		{
+			name:  "Azure Subscription Key",
+			input: `azure_subscription_key: "abcdefghijklmnopqrstuvwxyz123456"`,
+		},
+		{
+			name:  "Azure Storage Key",
+			input: `AccountKey="abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890123456789012345678901234567890"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ScrubDiff(tt.input)
+			if !strings.Contains(result, "[REDACTED_AZURE") {
+				t.Errorf("ScrubDiff() failed to redact Azure credentials.\nInput: %s\nOutput: %s", tt.input, result)
+			}
+		})
+	}
+}
+
+func TestScrubGoogleCloudCredentials(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "Google Cloud Service Account Key",
+			input: `GOOGLE_APPLICATION_CREDENTIALS="my-service-account-key.json"`,
+		},
+		{
+			name:  "Google Cloud API Key",
+			input: `gcp_api_key="abcdefghijklmnopqrstuvwxyz1234567890123456789"`,
+		},
+		{
+			name:  "Google Cloud JSON Credentials",
+			input: `"type": "service_account",\n"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5\n-----END PRIVATE KEY-----"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ScrubDiff(tt.input)
+			if !strings.Contains(result, "[REDACTED_") {
+				t.Errorf("ScrubDiff() failed to redact Google Cloud credentials.\nInput: %s\nOutput: %s", tt.input, result)
+			}
+		})
+	}
+}
+
+func TestScrubAdditionalAPIKeys(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "Stripe API Key",
+			input: `STRIPE_API_KEY="sk_live_1234567890abcdefghijklmnopqrstuvwxyz"`,
+		},
+		{
+			name:  "Twilio Auth Token",
+			input: `twilio_auth_token: "1234567890abcdef1234567890abcdef"`,
+		},
+		{
+			name:  "DigitalOcean API Key",
+			input: `digitalocean_api_key="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"`,
+		},
+		{
+			name:  "SendGrid API Key",
+			input: `SENDGRID_API_KEY="SG.1234567890abcdef1234567890abcdef.1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ScrubDiff(tt.input)
+			if !strings.Contains(result, "[REDACTED_") {
+				t.Errorf("ScrubDiff() failed to redact additional API keys.\nInput: %s\nOutput: %s", tt.input, result)
+			}
+		})
+	}
+}
+
+func TestScrubSSHKeys(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "OpenSSH Private Key",
+			input: `-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAlwAAAAdzc2gtcn\nNhAAAAAwEAAQAAAIEA2K8Qv8a4a5K6B2J8RiQzL1h4w0F2R3B4C5D6E7F8G9H0I1J2K3L4\n-----END OPENSSH PRIVATE KEY-----`,
+		},
+		{
+			name:  "SSH RSA Public Key",
+			input: `ssh_rsa_public_key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCeStA8tG2r5a user@hostname"`,
+		},
+		{
+			name:  "SSH ED25519 Public Key",
+			input: `SSH_ED25519_PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGbWQrKyUBUHvL3+d1H5Q8UQrBw6M5J user@example.com"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ScrubDiff(tt.input)
+			if !strings.Contains(result, "[REDACTED_") {
+				t.Errorf("ScrubDiff() failed to redact SSH keys.\nInput: %s\nOutput: %s", tt.input, result)
 			}
 		})
 	}
