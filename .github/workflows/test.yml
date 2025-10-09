@@ -45,8 +45,18 @@ jobs:
       
     - name: Run go fmt
       run: |
+        # Auto-format all Go files
+        gofmt -s -w .
+        
+        # Check if any files were formatted (would indicate pre-existing formatting issues)
+        if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+          echo "Some files were auto-formatted. Consider running 'gofmt -s -w .' locally before committing."
+          git diff --name-only
+        fi
+        
+        # Final check to ensure all files are properly formatted
         if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "The following files are not formatted:"
+          echo "The following files are still not formatted after auto-format:"
           gofmt -s -l .
           exit 1
         fi

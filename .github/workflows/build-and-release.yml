@@ -62,6 +62,17 @@ jobs:
       - name: Get dependencies
         run: go mod download
         
+      - name: Auto-format code
+        run: |
+          # Auto-format all Go files
+          gofmt -s -w .
+          
+          # Check if any files were formatted
+          if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+            echo "Some files were auto-formatted in the build process."
+            git diff --name-only
+          fi
+        
       - name: Run tests
         run: go test -v ./...
 
