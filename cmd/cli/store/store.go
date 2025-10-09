@@ -5,12 +5,32 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"os"
-	"path/filepath"
-	"runtime"
+
+	"github.com/99designs/keyring"
 
 	"github.com/dfanso/commit-msg/pkg/types"
+	StoreUtils "github.com/dfanso/commit-msg/utils"
 )
+
+
+
+type StoreMethods struct {
+	ring keyring.Keyring
+}
+
+//Initializes Keyring instance
+func KeyringInit() (*StoreMethods, error){
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: "commit-msg",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to open keyring: %w", err)
+	}
+	return &StoreMethods{ring:ring},nil
+} 
+
 
 // LLMProvider represents a single stored LLM provider and its credential.
 type LLMProvider struct {
@@ -18,28 +38,27 @@ type LLMProvider struct {
 	APIKey string            `json:"api_key"`
 }
 
+
 // Config describes the on-disk structure for all saved LLM providers.
 type Config struct {
 	Default      types.LLMProvider `json:"default"`
-	LLMProviders []LLMProvider     `json:"models"`
+	LLMProviders 		[]types.LLMProvider `json:"models"`
 }
 
+
 // Save persists or updates an LLM provider entry, marking it as the default.
-func Save(LLMConfig LLMProvider) error {
+func (s *StoreMethods) Save(LLMConfig LLMProvider) error {
 
-	cfg := Config{
-		Default:      LLMConfig.LLM,
-		LLMProviders: []LLMProvider{LLMConfig},
-	}
+	var cfg Config
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		err := createConfigFile(configPath)
+		err := StoreUtils.CreateConfigFile(configPath)
 		if err != nil {
 			return err
 		}
@@ -52,24 +71,40 @@ func Save(LLMConfig LLMProvider) error {
 		return err
 	}
 
-	if len(data) > 0 {
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return err
 		}
 	}
 
+
+	// If Model already present in config, update the apiKey
 	updated := false
-	for i, p := range cfg.LLMProviders {
-		if p.LLM == LLMConfig.LLM {
-			cfg.LLMProviders[i] = LLMConfig
+	for _, p := range cfg.LLMProviders {
+		if p == LLMConfig.LLM {
+			err := s.ring.Set(keyring.Item{ //save apiKey using keychain to OS credentials
+				Key: string(LLMConfig.LLM),
+				Data: []byte(LLMConfig.APIKey),
+			})
+			if err != nil {
+				return errors.New("error storing credentials")
+			}
 			updated = true
 			break
 		}
 	}
 
+	// If fresh Model is saved, means model not exists in config file
 	if !updated {
-		cfg.LLMProviders = append(cfg.LLMProviders, LLMConfig)
+		cfg.LLMProviders = append(cfg.LLMProviders, LLMConfig.LLM)
+		err := s.ring.Set(keyring.Item{					//save apiKey using keychain to OS credentials
+				Key: string(LLMConfig.LLM),
+				Data: []byte(LLMConfig.APIKey),
+			})
+		if err != nil {
+				return errors.New("error storing credentials")
+			}
 	}
 
 	cfg.Default = LLMConfig.LLM
@@ -82,79 +117,20 @@ func Save(LLMConfig LLMProvider) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
-func checkConfig(configPath string) bool {
-
-	_, err := os.Stat(configPath)
-	if err != nil || os.IsNotExist(err) {
-		return false
-	}
-
-	return true
-}
-
-func createConfigFile(configPath string) error {
-
-	err := os.MkdirAll(filepath.Dir(configPath), 0700)
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
-func getConfigPath() (string, error) {
-
-	appName := "commit-msg"
-
-	switch runtime.GOOS {
-
-	case "windows":
-		localAppData := os.Getenv("LOCALAPPDATA")
-		if localAppData == "" {
-			localAppData = filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local")
-		}
-
-		return filepath.Join(localAppData, appName, "config.json"), nil
-
-	case "darwin":
-
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-
-		return filepath.Join(home, "Library", "Application Support", appName, "config.json"), nil
-
-	default:
-
-		configHome := os.Getenv("XDG_CONFIG_HOME")
-		if configHome == "" {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return "", err
-			}
-
-			configHome = filepath.Join(home, ".config")
-		}
-
-		return filepath.Join(configHome, appName, "config.json"), nil
-	}
-
-}
 
 // DefaultLLMKey returns the currently selected default LLM provider, if any.
-func DefaultLLMKey() (*LLMProvider, error) {
+func (s *StoreMethods) DefaultLLMKey() (*LLMProvider, error) {
+
 
 	var cfg Config
 	var useModel LLMProvider
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
 		return nil, errors.New("config file Not exists")
 	}
@@ -176,8 +152,13 @@ func DefaultLLMKey() (*LLMProvider, error) {
 	defaultLLM := cfg.Default
 
 	for i, p := range cfg.LLMProviders {
-		if p.LLM == defaultLLM {
-			useModel = cfg.LLMProviders[i]
+		if p == defaultLLM {
+			useModel.LLM = cfg.LLMProviders[i] // Fetches default Model from config json
+			i,err := s.ring.Get(string(useModel.LLM)) //Fetches apiKey from OS credential for default model
+			if err != nil {
+				return nil,err
+			}
+			useModel.APIKey = string(i.Data)
 			return &useModel, nil
 		}
 	}
@@ -189,12 +170,12 @@ func ListSavedModels() (*Config, error) {
 
 	var cfg Config
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
 		return nil, errors.New("config file not exists")
 	}
@@ -204,7 +185,7 @@ func ListSavedModels() (*Config, error) {
 		return nil, err
 	}
 
-	if len(data) > 0 {
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return nil, err
@@ -222,12 +203,12 @@ func ChangeDefault(Model types.LLMProvider) error {
 
 	var cfg Config
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
 		return errors.New("config file not exists")
 	}
@@ -237,7 +218,7 @@ func ChangeDefault(Model types.LLMProvider) error {
 		return err
 	}
 
-	if len(data) > 0 {
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return err
@@ -246,7 +227,7 @@ func ChangeDefault(Model types.LLMProvider) error {
 
 	found := false
 	for _, p := range cfg.LLMProviders {
-		if p.LLM == Model {
+		if p == Model {
 			found = true
 			break
 		}
@@ -266,17 +247,17 @@ func ChangeDefault(Model types.LLMProvider) error {
 }
 
 // DeleteModel removes the specified provider from the saved configuration.
-func DeleteModel(Model types.LLMProvider) error {
+func (s *StoreMethods) DeleteModel(Model types.LLMProvider) error {
 
 	var cfg Config
 	var newCfg Config
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
 		return errors.New("config file not exists")
 	}
@@ -286,7 +267,7 @@ func DeleteModel(Model types.LLMProvider) error {
 		return err
 	}
 
-	if len(data) > 0 {
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return err
@@ -297,17 +278,25 @@ func DeleteModel(Model types.LLMProvider) error {
 		if len(cfg.LLMProviders) > 1 {
 			return fmt.Errorf("cannot delete %s while it is default, set other model default first", Model.String())
 		} else {
+			err := s.ring.Remove(string(Model)) // Removes the apiKey from OS credentials
+			if err != nil {
+			return err
+		}
 			return os.WriteFile(configPath, []byte("{}"), 0600)
 		}
 	} else {
 
 		for _, p := range cfg.LLMProviders {
 
-			if p.LLM != Model {
+			if p != Model {
 				newCfg.LLMProviders = append(newCfg.LLMProviders, p)
 			}
 		}
-
+		
+		err := s.ring.Remove(string(Model)) //Remove the apiKey from OS credentials
+		if err != nil {
+			return err
+		}
 		newCfg.Default = cfg.Default
 
 		data, err = json.MarshalIndent(newCfg, "", " ")
@@ -320,16 +309,16 @@ func DeleteModel(Model types.LLMProvider) error {
 }
 
 // UpdateAPIKey rotates the credential for an existing provider entry.
-func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
+func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 
 	var cfg Config
 
-	configPath, err := getConfigPath()
+	configPath, err := StoreUtils.GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	isConfigExists := checkConfig(configPath)
+	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
 		return errors.New("config file not exists")
 	}
@@ -339,7 +328,7 @@ func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 		return err
 	}
 
-	if len(data) > 0 {
+	if len(data) > 2 {
 		err = json.Unmarshal(data, &cfg)
 		if err != nil {
 			return err
@@ -347,9 +336,15 @@ func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 	}
 
 	updated := false
-	for i, p := range cfg.LLMProviders {
-		if p.LLM == Model {
-			cfg.LLMProviders[i].APIKey = APIKey
+	for _, p := range cfg.LLMProviders {
+		if p == Model {
+			err := s.ring.Set(keyring.Item{ 		// Update the apiKey in OS credential
+				Key: string(Model),
+				Data: []byte(APIKey),
+			})
+			if err != nil {
+				return errors.New("error storing credentials")
+			}
 			updated = true
 		}
 	}
@@ -366,3 +361,4 @@ func UpdateAPIKey(Model types.LLMProvider, APIKey string) error {
 	return os.WriteFile(configPath, data, 0600)
 
 }
+

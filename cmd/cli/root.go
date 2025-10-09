@@ -6,8 +6,17 @@ package cmd
 import (
 	"os"
 
+	"github.com/dfanso/commit-msg/cmd/cli/store"
 	"github.com/spf13/cobra"
 )
+
+//store instance
+var Store *store.StoreMethods
+
+//Initailize store
+func StoreInit(sm *store.StoreMethods){
+	Store = sm
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -47,7 +56,7 @@ var llmSetupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup your LLM provider and API key",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return SetupLLM()
+		return SetupLLM(Store)
 	},
 }
 
@@ -55,7 +64,7 @@ var llmUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update or Delete LLM Model",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return UpdateLLM()
+		return UpdateLLM(Store)
 	},
 }
 
@@ -72,7 +81,7 @@ var creatCommitMsg = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		CreateCommitMsg(dryRun, autoCommit)
+		CreateCommitMsg(Store, dryRun, autoCommit)
 		return nil
 	},
 }
@@ -86,6 +95,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
+	
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	// Add --dry-run and --auto as persistent flags so they show in top-level help
