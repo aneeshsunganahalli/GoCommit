@@ -22,7 +22,7 @@ func IsTextFile(filename string) bool {
 		".txt", ".md", ".go", ".js", ".py", ".java", ".c", ".cpp", ".h",
 		".html", ".css", ".json", ".xml", ".yaml", ".yml", ".sh", ".bash",
 		".ts", ".tsx", ".jsx", ".php", ".rb", ".rs", ".dart", ".sql", ".r",
-		".scala", ".kt", ".swift", ".m", ".pl", ".lua", ".vim", ".csv", 
+		".scala", ".kt", ".swift", ".m", ".pl", ".lua", ".vim", ".csv",
 		".log", ".cfg", ".conf", ".ini", ".toml", ".lock", ".gitignore",
 		".dockerfile", ".makefile", ".cmake", ".pro", ".pri", ".svg",
 	}
@@ -38,11 +38,11 @@ func IsTextFile(filename string) bool {
 	if ext == "" {
 		baseName := strings.ToLower(filepath.Base(filename))
 		commonTextFiles := []string{
-			"readme", "dockerfile", "makefile", "rakefile", "gemfile", 
+			"readme", "dockerfile", "makefile", "rakefile", "gemfile",
 			"procfile", "jenkinsfile", "vagrantfile", "changelog", "authors",
 			"contributors", "copying", "install", "news", "todo",
 		}
-		
+
 		for _, textFile := range commonTextFiles {
 			if baseName == textFile {
 				return true

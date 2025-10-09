@@ -9,8 +9,6 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-
-
 // SetupLLM walks the user through selecting an LLM provider and storing the
 // corresponding API key or endpoint configuration.
 func SetupLLM(Store *store.StoreMethods) error {
