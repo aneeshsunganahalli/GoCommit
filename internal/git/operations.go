@@ -34,15 +34,15 @@ func parseGitNameStatus(line string) parseGitStatusLine {
 	if line == "" {
 		return parseGitStatusLine{}
 	}
-	
+
 	// Git uses tabs to separate fields in --name-status output
 	parts := strings.Split(line, "\t")
 	if len(parts) < 2 {
 		return parseGitStatusLine{}
 	}
-	
+
 	status := parts[0]
-	
+
 	// Handle rename/copy status codes (e.g., "R100", "C75")
 	if len(status) > 1 && (status[0] == 'R' || status[0] == 'C') {
 		// For rename/copy, we expect: "R100\toldname\tnewname" or "C75\toldname\tnewname"
@@ -56,7 +56,7 @@ func parseGitNameStatus(line string) parseGitStatusLine {
 			}
 		}
 	}
-	
+
 	// Handle regular status codes (M, A, D, etc.)
 	filename := parts[1]
 	return parseGitStatusLine{
@@ -70,21 +70,21 @@ func processGitStatusOutput(nameStatusOutput string, returnFilenames bool) ([]st
 	if nameStatusOutput == "" {
 		return nil, nil
 	}
-	
+
 	lines := strings.Split(strings.TrimSpace(nameStatusOutput), "\n")
 	var filteredLines []string
 	var nonBinaryFiles []string
-	
+
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
-		
+
 		parsed := parseGitNameStatus(line)
 		if len(parsed.filenames) == 0 {
 			continue
 		}
-		
+
 		// Check if any of the filenames are binary
 		hasBinaryFile := false
 		for _, filename := range parsed.filenames {
@@ -93,7 +93,7 @@ func processGitStatusOutput(nameStatusOutput string, returnFilenames bool) ([]st
 				break
 			}
 		}
-		
+
 		// If no binary files found, include this line/files
 		if !hasBinaryFile {
 			filteredLines = append(filteredLines, line)
@@ -102,18 +102,18 @@ func processGitStatusOutput(nameStatusOutput string, returnFilenames bool) ([]st
 			}
 		}
 	}
-	
+
 	return filteredLines, nonBinaryFiles
 }
 
 // filterBinaryFiles filters out binary files from git diff --name-status output
 func filterBinaryFiles(nameStatusOutput string) string {
 	filteredLines, _ := processGitStatusOutput(nameStatusOutput, false)
-	
+
 	if len(filteredLines) == 0 {
 		return ""
 	}
-	
+
 	return strings.Join(filteredLines, "\n")
 }
 
@@ -137,7 +137,7 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 	if len(output) > 0 {
 		// Filter out binary files from the name-status output
 		filteredOutput := filterBinaryFiles(string(output))
-		
+
 		if filteredOutput != "" {
 			changes.WriteString("Unstaged changes:\n")
 			changes.WriteString(filteredOutput)
@@ -170,7 +170,7 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 	if len(stagedOutput) > 0 {
 		// Filter out binary files from the staged changes
 		filteredStagedOutput := filterBinaryFiles(string(stagedOutput))
-		
+
 		if filteredStagedOutput != "" {
 			changes.WriteString("Staged changes:\n")
 			changes.WriteString(filteredStagedOutput)
@@ -204,7 +204,7 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 		// Filter out binary files from untracked files
 		untrackedFiles := strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
 		var nonBinaryUntrackedFiles []string
-		
+
 		for _, file := range untrackedFiles {
 			if file == "" {
 				continue
@@ -213,7 +213,7 @@ func GetChanges(config *types.RepoConfig) (string, error) {
 				nonBinaryUntrackedFiles = append(nonBinaryUntrackedFiles, file)
 			}
 		}
-		
+
 		if len(nonBinaryUntrackedFiles) > 0 {
 			changes.WriteString("Untracked files:\n")
 			changes.WriteString(strings.Join(nonBinaryUntrackedFiles, "\n"))

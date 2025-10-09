@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	clientOnce sync.Once
+	clientOnce   sync.Once
 	sharedClient *http.Client
-	
+
 	ollamaClientOnce sync.Once
-	ollamaClient *http.Client
+	ollamaClient     *http.Client
 )
 
 // createTransport creates a shared HTTP transport with optimized settings

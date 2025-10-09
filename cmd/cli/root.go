@@ -11,7 +11,7 @@ import (
 var Store *store.StoreMethods
 
 //Initailize store
-func StoreInit(sm *store.StoreMethods){
+func StoreInit(sm *store.StoreMethods) {
 	Store = sm
 }
 
@@ -92,7 +92,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	
+
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	// Add --dry-run and --auto as persistent flags so they show in top-level help
