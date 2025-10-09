@@ -134,7 +134,7 @@ ghijklmnopqrstuvwxyz
 	if strings.Contains(result, "MIIEpAIBAAKCAQEA") || strings.Contains(result, "ghijklmnopqrstuvwxyz") {
 		t.Errorf("ScrubDiff() failed to redact private key.\nOutput: %s", result)
 	}
-	if !strings.Contains(result, "[REDACTED_PRIVATE_KEY]") {
+	if !strings.Contains(result, "[REDACTED_RSA_PRIVATE_KEY]") {
 		t.Errorf("ScrubDiff() did not add redaction marker.\nOutput: %s", result)
 	}
 }

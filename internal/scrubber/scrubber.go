@@ -44,6 +44,50 @@ var (
 			Redact:  "${1}=\"[REDACTED_AWS_SECRET]\"",
 		},
 
+		// Azure Credentials
+		{
+			Name:    "Azure Client Secret",
+			Pattern: regexp.MustCompile(`(?i)(azure[_-]?client[_-]?secret|AZURE_CLIENT_SECRET)\s*[=:]\s*["\']?([a-zA-Z0-9_\-\.~]{20,})["\']?`),
+			Redact:  "${1}=\"[REDACTED_AZURE_CLIENT_SECRET]\"",
+		},
+		{
+			Name:    "Azure Subscription Key",
+			Pattern: regexp.MustCompile(`(?i)(azure[_-]?subscription[_-]?key|AZURE_SUBSCRIPTION_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_AZURE_SUBSCRIPTION_KEY]\"",
+		},
+		{
+			Name:    "Azure Storage Key",
+			Pattern: regexp.MustCompile(`(?i)(azure[_-]?storage[_-]?key|AZURE_STORAGE_KEY|AccountKey)\s*[=:]\s*["\']?([a-zA-Z0-9/+=]{88})["\']?`),
+			Redact:  "${1}=\"[REDACTED_AZURE_STORAGE_KEY]\"",
+		},
+		{
+			Name:    "Azure Service Principal",
+			Pattern: regexp.MustCompile(`(?i)(azure[_-]?service[_-]?principal|AZURE_SERVICE_PRINCIPAL)\s*[=:]\s*["\']?([a-f0-9-]{36})["\']?`),
+			Redact:  "${1}=\"[REDACTED_AZURE_SERVICE_PRINCIPAL]\"",
+		},
+
+		// Google Cloud Credentials
+		{
+			Name:    "Google Cloud Service Account Key",
+			Pattern: regexp.MustCompile(`(?i)(gcp[_-]?service[_-]?account[_-]?key|GOOGLE_APPLICATION_CREDENTIALS)\s*[=:]\s*["\']?([a-zA-Z0-9_\-\.@]+\.json)["\']?`),
+			Redact:  "${1}=\"[REDACTED_GCP_SA_KEY]\"",
+		},
+		{
+			Name:    "Google Cloud API Key",
+			Pattern: regexp.MustCompile(`(?i)(gcp[_-]?api[_-]?key|GOOGLE_CLOUD_API_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{39})["\']?`),
+			Redact:  "${1}=\"[REDACTED_GCP_API_KEY]\"",
+		},
+		{
+			Name:    "Google Cloud OAuth Client",
+			Pattern: regexp.MustCompile(`(?i)(gcp[_-]?oauth[_-]?client[_-]?secret|GOOGLE_OAUTH_CLIENT_SECRET)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{24})["\']?`),
+			Redact:  "${1}=\"[REDACTED_GCP_OAUTH_SECRET]\"",
+		},
+		{
+			Name:    "Google Cloud JSON Credentials",
+			Pattern: regexp.MustCompile(`(?s)"type":\s*"service_account".*?"private_key":\s*"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----`),
+			Redact:  "\"type\": \"service_account\",\n\"private_key\": \"[REDACTED_GCP_PRIVATE_KEY]\"",
+		},
+
 		// Database Credentials
 		{
 			Name:    "Database URL with Password",
@@ -88,11 +132,154 @@ var (
 			Redact:  "${1}=\"[REDACTED_SLACK_TOKEN]\"",
 		},
 
-		// Private Keys
+		// Payment & Communication APIs
 		{
-			Name:    "Private Key",
-			Pattern: regexp.MustCompile(`(?s)(-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----).*?(-----END (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----)`),
+			Name:    "Stripe API Key",
+			Pattern: regexp.MustCompile(`(?i)(stripe[_-]?api[_-]?key|STRIPE_API_KEY)\s*[=:]\s*["\']?(sk_live_[a-zA-Z0-9]{24})["\']?`),
+			Redact:  "${1}=\"[REDACTED_STRIPE_KEY]\"",
+		},
+		{
+			Name:    "Stripe Publishable Key",
+			Pattern: regexp.MustCompile(`(?i)(stripe[_-]?publishable[_-]?key|STRIPE_PUBLISHABLE_KEY)\s*[=:]\s*["\']?(pk_live_[a-zA-Z0-9]{24})["\']?`),
+			Redact:  "${1}=\"[REDACTED_STRIPE_PUBLISHABLE_KEY]\"",
+		},
+		{
+			Name:    "Twilio API Key",
+			Pattern: regexp.MustCompile(`(?i)(twilio[_-]?api[_-]?key|TWILIO_API_KEY)\s*[=:]\s*["\']?(SK[a-f0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_TWILIO_API_KEY]\"",
+		},
+		{
+			Name:    "Twilio Auth Token",
+			Pattern: regexp.MustCompile(`(?i)(twilio[_-]?auth[_-]?token|TWILIO_AUTH_TOKEN)\s*[=:]\s*["\']?([a-f0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_TWILIO_AUTH_TOKEN]\"",
+		},
+		{
+			Name:    "Twilio Account SID",
+			Pattern: regexp.MustCompile(`(?i)(twilio[_-]?account[_-]?sid|TWILIO_ACCOUNT_SID)\s*[=:]\s*["\']?(AC[a-f0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_TWILIO_ACCOUNT_SID]\"",
+		},
+
+		// Cloud & Infrastructure APIs
+		{
+			Name:    "DigitalOcean API Key",
+			Pattern: regexp.MustCompile(`(?i)(digitalocean[_-]?api[_-]?key|DIGITALOCEAN_API_KEY)\s*[=:]\s*["\']?([a-f0-9]{64})["\']?`),
+			Redact:  "${1}=\"[REDACTED_DIGITALOCEAN_KEY]\"",
+		},
+		{
+			Name:    "Heroku API Key",
+			Pattern: regexp.MustCompile(`(?i)(heroku[_-]?api[_-]?key|HEROKU_API_KEY)\s*[=:]\s*["\']?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})["\']?`),
+			Redact:  "${1}=\"[REDACTED_HEROKU_KEY]\"",
+		},
+		{
+			Name:    "Vercel API Key",
+			Pattern: regexp.MustCompile(`(?i)(vercel[_-]?api[_-]?key|VERCEL_API_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{24})["\']?`),
+			Redact:  "${1}=\"[REDACTED_VERCEL_KEY]\"",
+		},
+		{
+			Name:    "Netlify API Key",
+			Pattern: regexp.MustCompile(`(?i)(netlify[_-]?api[_-]?key|NETLIFY_API_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{40})["\']?`),
+			Redact:  "${1}=\"[REDACTED_NETLIFY_KEY]\"",
+		},
+
+		// Database & Analytics APIs
+		{
+			Name:    "MongoDB Atlas API Key",
+			Pattern: regexp.MustCompile(`(?i)(mongodb[_-]?api[_-]?key|MONGODB_API_KEY)\s*[=:]\s*["\']?([a-f0-9]{24}-[a-f0-9]{24})["\']?`),
+			Redact:  "${1}=\"[REDACTED_MONGODB_API_KEY]\"",
+		},
+		{
+			Name:    "SendGrid API Key",
+			Pattern: regexp.MustCompile(`(?i)(sendgrid[_-]?api[_-]?key|SENDGRID_API_KEY)\s*[=:]\s*["\']?(SG\.[a-zA-Z0-9_\-\.]{22,}\.[a-zA-Z0-9_\-\.]{43})["\']?`),
+			Redact:  "${1}=\"[REDACTED_SENDGRID_KEY]\"",
+		},
+		{
+			Name:    "Mailgun API Key",
+			Pattern: regexp.MustCompile(`(?i)(mailgun[_-]?api[_-]?key|MAILGUN_API_KEY)\s*[=:]\s*["\']?(key-[a-f0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_MAILGUN_KEY]\"",
+		},
+
+		// Social & Auth APIs
+		{
+			Name:    "Facebook App Secret",
+			Pattern: regexp.MustCompile(`(?i)(facebook[_-]?app[_-]?secret|FACEBOOK_APP_SECRET)\s*[=:]\s*["\']?([a-f0-9]{32})["\']?`),
+			Redact:  "${1}=\"[REDACTED_FACEBOOK_SECRET]\"",
+		},
+		{
+			Name:    "Twitter API Key",
+			Pattern: regexp.MustCompile(`(?i)(twitter[_-]?api[_-]?key|TWITTER_API_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9]{25})["\']?`),
+			Redact:  "${1}=\"[REDACTED_TWITTER_API_KEY]\"",
+		},
+		{
+			Name:    "Twitter API Secret",
+			Pattern: regexp.MustCompile(`(?i)(twitter[_-]?api[_-]?secret|TWITTER_API_SECRET)\s*[=:]\s*["\']?([a-zA-Z0-9]{50})["\']?`),
+			Redact:  "${1}=\"[REDACTED_TWITTER_API_SECRET]\"",
+		},
+		{
+			Name:    "LinkedIn Client Secret",
+			Pattern: regexp.MustCompile(`(?i)(linkedin[_-]?client[_-]?secret|LINKEDIN_CLIENT_SECRET)\s*[=:]\s*["\']?([a-zA-Z0-9]{16})["\']?`),
+			Redact:  "${1}=\"[REDACTED_LINKEDIN_SECRET]\"",
+		},
+
+		// SSH Keys and Private Keys in various formats
+		{
+			Name:    "RSA Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN RSA PRIVATE KEY-----).*?(-----END RSA PRIVATE KEY-----)`),
+			Redact:  "${1}\n[REDACTED_RSA_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "EC Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN EC PRIVATE KEY-----).*?(-----END EC PRIVATE KEY-----)`),
+			Redact:  "${1}\n[REDACTED_EC_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "DSA Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN DSA PRIVATE KEY-----).*?(-----END DSA PRIVATE KEY-----)`),
+			Redact:  "${1}\n[REDACTED_DSA_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "OpenSSH Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN OPENSSH PRIVATE KEY-----).*?(-----END OPENSSH PRIVATE KEY-----)`),
+			Redact:  "${1}\n[REDACTED_OPENSSH_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "PKCS#8 Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN PRIVATE KEY-----).*?(-----END PRIVATE KEY-----)`),
 			Redact:  "${1}\n[REDACTED_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "PGP Private Key",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN PGP PRIVATE KEY BLOCK-----).*?(-----END PGP PRIVATE KEY BLOCK-----)`),
+			Redact:  "${1}\n[REDACTED_PGP_PRIVATE_KEY]\n${2}",
+		},
+		{
+			Name:    "SSH Public Key (RSA)",
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?rsa[_-]?public[_-]?key|SSH_RSA_PUBLIC_KEY)\s*[=:]\s*["\']?(ssh-rsa [a-zA-Z0-9/+=]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Redact:  "${1}=\"[REDACTED_SSH_RSA_PUBLIC_KEY]\"",
+		},
+		{
+			Name:    "SSH Public Key (ED25519)",
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?ed25519[_-]?public[_-]?key|SSH_ED25519_PUBLIC_KEY)\s*[=:]\s*["\']?(ssh-ed25519 [a-zA-Z0-9]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Redact:  "${1}=\"[REDACTED_SSH_ED25519_PUBLIC_KEY]\"",
+		},
+		{
+			Name:    "SSH Public Key (ECDSA)",
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?ecdsa[_-]?public[_-]?key|SSH_ECDSA_PUBLIC_KEY)\s*[=:]\s*["\']?(ecdsa-sha2-[a-zA-Z0-9-]+ [a-zA-Z0-9/+=]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Redact:  "${1}=\"[REDACTED_SSH_ECDSA_PUBLIC_KEY]\"",
+		},
+		{
+			Name:    "SSH Public Key (Generic)",
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?public[_-]?key|SSH_PUBLIC_KEY)\s*[=:]\s*["\']?(ssh-[a-zA-Z0-9-]+ [a-zA-Z0-9/+=]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Redact:  "${1}=\"[REDACTED_SSH_PUBLIC_KEY]\"",
+		},
+		{
+			Name:    "SSH Authorized Keys",
+			Pattern: regexp.MustCompile(`(?i)(ssh[_-]?authorized[_-]?keys|SSH_AUTHORIZED_KEYS)\s*[=:]\s*["\']?(ssh-[a-zA-Z0-9-]+ [a-zA-Z0-9/+=]+ [a-zA-Z0-9._@-]+)["\']?`),
+			Redact:  "${1}=\"[REDACTED_SSH_AUTHORIZED_KEYS]\"",
+		},
+		{
+			Name:    "SSH Private Key File Content",
+			Pattern: regexp.MustCompile(`(?s)(-----BEGIN [A-Z ]+PRIVATE KEY-----\n)([A-Za-z0-9+/=\n]+)(\n-----END [A-Z ]+PRIVATE KEY-----)`),
+			Redact:  "${1}[REDACTED_SSH_PRIVATE_KEY_CONTENT]${3}",
 		},
 
 		// JWT Tokens
