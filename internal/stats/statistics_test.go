@@ -24,12 +24,13 @@ func TestGetFileStatistics(t *testing.T) {
 			Path: "/non/existent/path",
 		}
 
-		// The function should not panic and should return some stats
+		// The function should return an error for non-existent directory
 		stats, err := GetFileStatistics(config)
-		// It may not return an error, but should handle it gracefully
-		_ = err
-		if stats == nil {
-			t.Fatal("expected stats to be returned even for non-existent directory")
+		if err == nil {
+			t.Fatal("expected error for non-existent directory")
+		}
+		if stats != nil {
+			t.Fatal("expected nil stats when error occurs")
 		}
 	})
 
@@ -41,12 +42,13 @@ func TestGetFileStatistics(t *testing.T) {
 			Path: dir,
 		}
 
-		// The function should not panic and should return some stats
+		// The function should return an error for non-git directory
 		stats, err := GetFileStatistics(config)
-		// It may not return an error, but should handle it gracefully
-		_ = err
-		if stats == nil {
-			t.Fatal("expected stats to be returned even for non-git directory")
+		if err == nil {
+			t.Fatal("expected error for non-git directory")
+		}
+		if stats != nil {
+			t.Fatal("expected nil stats when error occurs")
 		}
 	})
 
