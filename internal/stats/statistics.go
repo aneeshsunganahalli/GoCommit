@@ -21,21 +21,30 @@ func GetFileStatistics(config *types.RepoConfig) (*display.FileStatistics, error
 	// Get staged files
 	stagedCmd := exec.Command("git", "-C", config.Path, "diff", "--name-only", "--cached")
 	stagedOutput, err := stagedCmd.Output()
-	if err == nil && len(stagedOutput) > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("failed to get staged files: %w", err)
+	}
+	if len(stagedOutput) > 0 {
 		stats.StagedFiles = strings.Split(strings.TrimSpace(string(stagedOutput)), "\n")
 	}
 
 	// Get unstaged files
 	unstagedCmd := exec.Command("git", "-C", config.Path, "diff", "--name-only")
 	unstagedOutput, err := unstagedCmd.Output()
-	if err == nil && len(unstagedOutput) > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("failed to get unstaged files: %w", err)
+	}
+	if len(unstagedOutput) > 0 {
 		stats.UnstagedFiles = strings.Split(strings.TrimSpace(string(unstagedOutput)), "\n")
 	}
 
 	// Get untracked files
 	untrackedCmd := exec.Command("git", "-C", config.Path, "ls-files", "--others", "--exclude-standard")
 	untrackedOutput, err := untrackedCmd.Output()
-	if err == nil && len(untrackedOutput) > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("failed to get untracked files: %w", err)
+	}
+	if len(untrackedOutput) > 0 {
 		stats.UntrackedFiles = strings.Split(strings.TrimSpace(string(untrackedOutput)), "\n")
 	}
 
@@ -50,7 +59,10 @@ func GetFileStatistics(config *types.RepoConfig) (*display.FileStatistics, error
 	if len(stats.StagedFiles) > 0 {
 		statCmd := exec.Command("git", "-C", config.Path, "diff", "--cached", "--numstat")
 		statOutput, err := statCmd.Output()
-		if err == nil {
+		if err != nil {
+			return nil, fmt.Errorf("failed to get line statistics: %w", err)
+		}
+		if len(statOutput) > 0 {
 			lines := strings.Split(strings.TrimSpace(string(statOutput)), "\n")
 			for _, line := range lines {
 				parts := strings.Fields(line)
