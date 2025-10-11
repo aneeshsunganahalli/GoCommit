@@ -129,6 +129,7 @@ func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 	spinnerGenerating.Success("Commit message generated successfully!")
 
 	currentMessage := strings.TrimSpace(commitMsg)
+	validateCommitMessageLength(currentMessage)
 	currentStyleLabel := stylePresets[0].Label
 	var currentStyleOpts *types.GenerationOptions
 	accepted := false
@@ -190,6 +191,7 @@ interactionLoop:
 			spinner.Success("Commit message regenerated!")
 			attempt = nextAttempt
 			currentMessage = strings.TrimSpace(updatedMessage)
+			validateCommitMessageLength(currentMessage)
 		case actionEditOption:
 			edited, editErr := editCommitMessage(currentMessage)
 			if editErr != nil {
@@ -201,6 +203,7 @@ interactionLoop:
 				continue
 			}
 			currentMessage = strings.TrimSpace(edited)
+			validateCommitMessageLength(currentMessage)
 		case actionExitOption:
 			pterm.Info.Println("Exiting without copying commit message.")
 			return
@@ -576,4 +579,31 @@ func maskAPIKey(apiKey string) string {
 // estimateTokens provides a rough estimate of token count (1 token ≈ 4 characters)
 func estimateTokens(text string) int {
 	return len(text) / 4
+}
+
+// validateCommitMessageLength checks if the commit message exceeds recommended length limits
+// and displays appropriate warnings
+func validateCommitMessageLength(message string) {
+	if message == "" {
+		return
+	}
+
+	lines := strings.Split(message, "\n")
+	if len(lines) == 0 {
+		return
+	}
+
+	subjectLine := strings.TrimSpace(lines[0])
+	subjectLength := len(subjectLine)
+
+	// Git recommends subject lines be 50 characters or less, but allows up to 72
+	const maxRecommendedLength = 50
+	const maxAllowedLength = 72
+
+	if subjectLength > maxAllowedLength {
+		pterm.Warning.Printf("Commit message subject line is %d characters (exceeds %d character limit)\n", subjectLength, maxAllowedLength)
+		pterm.Info.Println("Consider shortening the subject line for better readability")
+	} else if subjectLength > maxRecommendedLength {
+		pterm.Warning.Printf("Commit message subject line is %d characters (recommended limit is %d)\n", subjectLength, maxRecommendedLength)
+	}
 }
