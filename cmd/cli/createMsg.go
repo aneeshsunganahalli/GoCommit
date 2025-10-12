@@ -548,12 +548,26 @@ func displayDryRunInfo(provider types.LLMProvider, config *types.Config, changes
 	pterm.DefaultSection.Println("Changes Summary")
 	linesCount := len(strings.Split(changes, "\n"))
 	charsCount := len(changes)
+	inputTokens := estimateTokens(prompt)
+	// Estimate output tokens (typically 50-200 for commit messages)
+	outputTokens := 100
+	estimatedCost := estimateCost(provider, inputTokens, outputTokens)
+	minTime, maxTime := estimateProcessingTime(provider)
 
 	statsData := [][]string{
 		{"Total Lines", fmt.Sprintf("%d", linesCount)},
 		{"Total Characters", fmt.Sprintf("%d", charsCount)},
-		{"Prompt Size (approx)", fmt.Sprintf("%d tokens", estimateTokens(prompt))},
+		{"Estimated Input Tokens", fmt.Sprintf("%d", inputTokens)},
+		{"Estimated Output Tokens", fmt.Sprintf("%d", outputTokens)},
+		{"Estimated Total Tokens", fmt.Sprintf("%d", inputTokens+outputTokens)},
 	}
+
+	if provider != types.ProviderOllama {
+		statsData = append(statsData, []string{"Estimated Cost", fmt.Sprintf("$%.4f", estimatedCost)})
+	}
+
+	statsData = append(statsData, []string{"Estimated Processing Time", fmt.Sprintf("%d-%d seconds", minTime, maxTime)})
+
 	pterm.DefaultTable.WithHasHeader(false).WithData(statsData).Render()
 
 	pterm.Println()
@@ -579,6 +593,47 @@ func maskAPIKey(apiKey string) string {
 // estimateTokens provides a rough estimate of token count (1 token ≈ 4 characters)
 func estimateTokens(text string) int {
 	return len(text) / 4
+}
+
+// estimateCost calculates the estimated cost for a given provider and token count
+func estimateCost(provider types.LLMProvider, inputTokens, outputTokens int) float64 {
+	// Pricing per 1M tokens (as of 2024, approximate)
+	switch provider {
+	case types.ProviderOpenAI:
+		// GPT-4o pricing: ~$2.50/M input, ~$10/M output
+		return float64(inputTokens)*2.50/1000000 + float64(outputTokens)*10.00/1000000
+	case types.ProviderClaude:
+		// Claude pricing: ~$3/M input, ~$15/M output
+		return float64(inputTokens)*3.00/1000000 + float64(outputTokens)*15.00/1000000
+	case types.ProviderGemini:
+		// Gemini pricing: ~$0.15/M input, ~$0.60/M output
+		return float64(inputTokens)*0.15/1000000 + float64(outputTokens)*0.60/1000000
+	case types.ProviderGrok:
+		// Grok pricing: ~$5/M input, ~$15/M output
+		return float64(inputTokens)*5.00/1000000 + float64(outputTokens)*15.00/1000000
+	case types.ProviderGroq:
+		// Groq pricing: similar to OpenAI ~$2.50/M input, ~$10/M output
+		return float64(inputTokens)*2.50/1000000 + float64(outputTokens)*10.00/1000000
+	case types.ProviderOllama:
+		// Local model - no cost
+		return 0.0
+	default:
+		return 0.0
+	}
+}
+
+// estimateProcessingTime returns estimated processing time in seconds for a provider
+func estimateProcessingTime(provider types.LLMProvider) (minTime, maxTime int) {
+	switch provider {
+	case types.ProviderOllama:
+		// Local models take longer
+		return 10, 30
+	case types.ProviderOpenAI, types.ProviderClaude, types.ProviderGemini, types.ProviderGrok, types.ProviderGroq:
+		// Cloud providers are faster
+		return 5, 15
+	default:
+		return 5, 15
+	}
 }
 
 // validateCommitMessageLength checks if the commit message exceeds recommended length limits
