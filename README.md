@@ -11,7 +11,7 @@
 
 Below is a sample execution of `commit-msg`:
 
-![Commit-msg GIF](assets/commit.gif)
+![Commit-msg GIF](assets/commit-msg-preview.gif)
 
 ## Before running the application, set LLM and API Key using "commit llm setup"
 
