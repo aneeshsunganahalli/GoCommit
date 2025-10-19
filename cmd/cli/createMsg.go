@@ -91,6 +91,33 @@ func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 		return
 	}
 
+	//  Large diff handling
+	const maxDiffChars = 8000 // can change as needed
+	const maxDiffLines = 300  
+
+	diffLines := strings.Split(changes, "\n")
+	diffTooLarge := len(changes) > maxDiffChars || len(diffLines) > maxDiffLines
+
+	if diffTooLarge {
+		pterm.Warning.Println("The diff is very large and may exceed the LLM's context window.")
+		pterm.Info.Printf("Diff size: %d lines, %d characters.\n", len(diffLines), len(changes))
+		pterm.Info.Println("Only the first part of the diff will be used for commit message generation.")
+
+		// Truncate the diff for LLM input
+		truncatedLines := diffLines
+		if len(diffLines) > maxDiffLines {
+			truncatedLines = diffLines[:maxDiffLines]
+		}
+		truncatedDiff := strings.Join(truncatedLines, "\n")
+		if len(truncatedDiff) > maxDiffChars {
+			truncatedDiff = truncatedDiff[:maxDiffChars]
+		}
+		changes = truncatedDiff
+
+		pterm.Info.Printf("Truncated diff to %d lines, %d characters.\n", len(strings.Split(changes, "\n")), len(changes))
+		pterm.Info.Println("Consider committing smaller changes for more accurate commit messages.")
+	}
+
 	// Handle dry-run mode: display what would be sent to LLM without making API call
 	if dryRun {
 		pterm.Println()
