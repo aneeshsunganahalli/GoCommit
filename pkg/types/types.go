@@ -106,3 +106,38 @@ type UsageInfo struct {
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`
 }
+
+// CacheEntry represents a cached commit message with metadata.
+type CacheEntry struct {
+	Message          string      `json:"message"`
+	Provider         LLMProvider `json:"provider"`
+	DiffHash         string      `json:"diff_hash"`
+	StyleInstruction string      `json:"style_instruction,omitempty"`
+	Attempt          int         `json:"attempt"`
+	CreatedAt        string      `json:"created_at"`
+	LastAccessedAt   string      `json:"last_accessed_at"`
+	AccessCount      int         `json:"access_count"`
+	Cost             float64     `json:"cost,omitempty"`
+	Tokens           *UsageInfo  `json:"tokens,omitempty"`
+}
+
+// CacheStats provides statistics about the cache.
+type CacheStats struct {
+	TotalEntries   int     `json:"total_entries"`
+	TotalHits      int     `json:"total_hits"`
+	TotalMisses    int     `json:"total_misses"`
+	HitRate        float64 `json:"hit_rate"`
+	TotalCostSaved float64 `json:"total_cost_saved"`
+	OldestEntry    string  `json:"oldest_entry"`
+	NewestEntry    string  `json:"newest_entry"`
+	CacheSizeBytes int64   `json:"cache_size_bytes"`
+}
+
+// CacheConfig holds configuration for the cache system.
+type CacheConfig struct {
+	Enabled         bool   `json:"enabled"`
+	MaxEntries      int    `json:"max_entries"`
+	MaxAgeDays      int    `json:"max_age_days"`
+	CleanupInterval int    `json:"cleanup_interval_hours"`
+	CacheFilePath   string `json:"cache_file_path"`
+}

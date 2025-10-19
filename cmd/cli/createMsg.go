@@ -119,7 +119,7 @@ func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 	}
 
 	attempt := 1
-	commitMsg, err := generateMessage(ctx, providerInstance, changes, withAttempt(nil, attempt))
+	commitMsg, err := generateMessageWithCache(ctx, providerInstance, Store, commitLLM, changes, withAttempt(nil, attempt))
 	if err != nil {
 		spinnerGenerating.Fail("Failed to generate commit message")
 		displayProviderError(commitLLM, err)
@@ -182,7 +182,7 @@ interactionLoop:
 				pterm.Error.Printf("Failed to start spinner: %v\n", err)
 				continue
 			}
-			updatedMessage, genErr := generateMessage(ctx, providerInstance, changes, generationOpts)
+			updatedMessage, genErr := generateMessageWithCache(ctx, providerInstance, Store, commitLLM, changes, generationOpts)
 			if genErr != nil {
 				spinner.Fail("Regeneration failed")
 				displayProviderError(commitLLM, genErr)
@@ -295,6 +295,37 @@ func resolveOllamaConfig(apiKey string) (url, model string) {
 
 func generateMessage(ctx context.Context, provider llm.Provider, changes string, opts *types.GenerationOptions) (string, error) {
 	return provider.Generate(ctx, changes, opts)
+}
+
+// generateMessageWithCache generates a commit message with caching support.
+func generateMessageWithCache(ctx context.Context, provider llm.Provider, store *store.StoreMethods, providerType types.LLMProvider, changes string, opts *types.GenerationOptions) (string, error) {
+	// Check cache first (only for first attempt to avoid caching regenerations)
+	if opts == nil || opts.Attempt <= 1 {
+		if cachedEntry, found := store.GetCachedMessage(providerType, changes, opts); found {
+			pterm.Info.Printf("Using cached commit message (saved $%.4f)\n", cachedEntry.Cost)
+			return cachedEntry.Message, nil
+		}
+	}
+
+	// Generate new message
+	message, err := provider.Generate(ctx, changes, opts)
+	if err != nil {
+		return "", err
+	}
+
+	// Cache the result (only for first attempt)
+	if opts == nil || opts.Attempt <= 1 {
+		// Estimate cost for caching
+		cost := estimateCost(providerType, estimateTokens(types.BuildCommitPrompt(changes, opts)), 100)
+
+		// Store in cache
+		if cacheErr := store.SetCachedMessage(providerType, changes, opts, message, cost, nil); cacheErr != nil {
+			// Log cache error but don't fail the generation
+			fmt.Printf("Warning: Failed to cache message: %v\n", cacheErr)
+		}
+	}
+
+	return message, nil
 }
 
 func promptActionSelection() (string, error) {

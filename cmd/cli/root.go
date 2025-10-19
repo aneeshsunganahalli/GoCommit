@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//store instance
+// store instance
 var Store *store.StoreMethods
 
-//Initailize store
+// Initailize store
 func StoreInit(sm *store.StoreMethods) {
 	Store = sm
 }
@@ -65,6 +65,36 @@ var llmUpdateCmd = &cobra.Command{
 	},
 }
 
+var cacheCmd = &cobra.Command{
+	Use:   "cache",
+	Short: "Manage commit message cache",
+	Long:  `Manage the cache of generated commit messages to reduce API costs and improve performance.`,
+}
+
+var cacheStatsCmd = &cobra.Command{
+	Use:   "stats",
+	Short: "Show cache statistics",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return ShowCacheStats(Store)
+	},
+}
+
+var cacheClearCmd = &cobra.Command{
+	Use:   "clear",
+	Short: "Clear all cached messages",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return ClearCache(Store)
+	},
+}
+
+var cacheCleanupCmd = &cobra.Command{
+	Use:   "cleanup",
+	Short: "Remove old cached messages",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return CleanupCache(Store)
+	},
+}
+
 var creatCommitMsg = &cobra.Command{
 	Use:   ".",
 	Short: "Create Commit Message",
@@ -101,6 +131,10 @@ func init() {
 
 	rootCmd.AddCommand(creatCommitMsg)
 	rootCmd.AddCommand(llmCmd)
+	rootCmd.AddCommand(cacheCmd)
 	llmCmd.AddCommand(llmSetupCmd)
 	llmCmd.AddCommand(llmUpdateCmd)
+	cacheCmd.AddCommand(cacheStatsCmd)
+	cacheCmd.AddCommand(cacheClearCmd)
+	cacheCmd.AddCommand(cacheCleanupCmd)
 }

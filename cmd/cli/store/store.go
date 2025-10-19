@@ -10,12 +10,34 @@ import (
 
 	"github.com/99designs/keyring"
 
+	"github.com/dfanso/commit-msg/internal/cache"
 	"github.com/dfanso/commit-msg/pkg/types"
 	StoreUtils "github.com/dfanso/commit-msg/utils"
 )
 
 type StoreMethods struct {
-	ring keyring.Keyring
+	ring  keyring.Keyring
+	cache *cache.CacheManager
+}
+
+// NewStoreMethods creates a new StoreMethods instance with cache support.
+func NewStoreMethods() (*StoreMethods, error) {
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: "commit-msg",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to open keyring: %w", err)
+	}
+
+	cacheManager, err := cache.NewCacheManager()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache: %w", err)
+	}
+
+	return &StoreMethods{
+		ring:  ring,
+		cache: cacheManager,
+	}, nil
 }
 
 // Initializes Keyring instance
@@ -359,4 +381,36 @@ func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) erro
 
 	return os.WriteFile(configPath, data, 0600)
 
+}
+
+// Cache management methods
+
+// GetCacheManager returns the cache manager instance.
+func (s *StoreMethods) GetCacheManager() *cache.CacheManager {
+	return s.cache
+}
+
+// GetCachedMessage retrieves a cached commit message if it exists.
+func (s *StoreMethods) GetCachedMessage(provider types.LLMProvider, diff string, opts *types.GenerationOptions) (*types.CacheEntry, bool) {
+	return s.cache.Get(provider, diff, opts)
+}
+
+// SetCachedMessage stores a commit message in the cache.
+func (s *StoreMethods) SetCachedMessage(provider types.LLMProvider, diff string, opts *types.GenerationOptions, message string, cost float64, tokens *types.UsageInfo) error {
+	return s.cache.Set(provider, diff, opts, message, cost, tokens)
+}
+
+// ClearCache removes all entries from the cache.
+func (s *StoreMethods) ClearCache() error {
+	return s.cache.Clear()
+}
+
+// GetCacheStats returns cache statistics.
+func (s *StoreMethods) GetCacheStats() *types.CacheStats {
+	return s.cache.GetStats()
+}
+
+// CleanupCache removes old entries from the cache.
+func (s *StoreMethods) CleanupCache() error {
+	return s.cache.Cleanup()
 }
