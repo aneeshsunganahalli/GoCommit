@@ -93,7 +93,7 @@ func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 
 	//  Large diff handling
 	const maxDiffChars = 8000 // can change as needed
-	const maxDiffLines = 300  
+	const maxDiffLines = 300
 
 	diffLines := strings.Split(changes, "\n")
 	diffTooLarge := len(changes) > maxDiffChars || len(diffLines) > maxDiffLines
@@ -103,18 +103,26 @@ func CreateCommitMsg(Store *store.StoreMethods, dryRun bool, autoCommit bool) {
 		pterm.Info.Printf("Diff size: %d lines, %d characters.\n", len(diffLines), len(changes))
 		pterm.Info.Println("Only the first part of the diff will be used for commit message generation.")
 
-		// Truncate the diff for LLM input
-		truncatedLines := diffLines
-		if len(diffLines) > maxDiffLines {
-			truncatedLines = diffLines[:maxDiffLines]
-		}
-		truncatedDiff := strings.Join(truncatedLines, "\n")
-		if len(truncatedDiff) > maxDiffChars {
-			truncatedDiff = truncatedDiff[:maxDiffChars]
-		}
-		changes = truncatedDiff
+		// Truncate the diff for LLM input, preserving whole lines and UTF-8 safety
+		truncatedLines := make([]string, 0, len(diffLines))
+		totalChars := 0
 
-		pterm.Info.Printf("Truncated diff to %d lines, %d characters.\n", len(strings.Split(changes, "\n")), len(changes))
+		for i, line := range diffLines {
+			lineLen := len([]rune(line)) + 1 // +1 for newline, using rune count for UTF-8 safety
+
+			// Stop if we've reached max lines or adding this line would exceed max chars
+			if i >= maxDiffLines || (totalChars+lineLen) > maxDiffChars {
+				break
+			}
+
+			truncatedLines = append(truncatedLines, line)
+			totalChars += lineLen
+		}
+
+		changes = strings.Join(truncatedLines, "\n")
+		actualLineCount := len(truncatedLines)
+
+		pterm.Info.Printf("Truncated diff to %d lines, %d characters.\n", actualLineCount, len(changes))
 		pterm.Info.Println("Consider committing smaller changes for more accurate commit messages.")
 	}
 
