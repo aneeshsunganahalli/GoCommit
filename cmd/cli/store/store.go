@@ -84,7 +84,7 @@ func (s *StoreMethods) Save(LLMConfig LLMProvider) error {
 				Data: []byte(LLMConfig.APIKey),
 			})
 			if err != nil {
-				return errors.New("error storing credentials")
+				return fmt.Errorf("failed to store credentials in keyring: %w", err)
 			}
 			updated = true
 			break
@@ -99,7 +99,7 @@ func (s *StoreMethods) Save(LLMConfig LLMProvider) error {
 			Data: []byte(LLMConfig.APIKey),
 		})
 		if err != nil {
-			return errors.New("error storing credentials")
+			return fmt.Errorf("failed to store credentials in keyring: %w", err)
 		}
 	}
 
@@ -126,7 +126,7 @@ func (s *StoreMethods) DefaultLLMKey() (*LLMProvider, error) {
 
 	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		return nil, errors.New("config file Not exists")
+		return nil, fmt.Errorf("config file does not exist at %s, run 'commit llm setup' to create it", configPath)
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -141,7 +141,7 @@ func (s *StoreMethods) DefaultLLMKey() (*LLMProvider, error) {
 			return nil, fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	} else {
-		return nil, errors.New("config file is empty, Please add at least one LLM Key")
+		return nil, errors.New("config file is empty, run 'commit llm setup' to add your first LLM provider")
 	}
 
 	defaultLLM := cfg.Default
@@ -157,7 +157,7 @@ func (s *StoreMethods) DefaultLLMKey() (*LLMProvider, error) {
 			return &useModel, nil
 		}
 	}
-	return nil, errors.New("not found default model in config")
+	return nil, fmt.Errorf("default model '%s' not found in saved providers, run 'commit llm setup' to configure it", defaultLLM)
 }
 
 // ListSavedModels loads all persisted LLM provider configurations.
@@ -172,7 +172,7 @@ func ListSavedModels() (*Config, error) {
 
 	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		return nil, errors.New("config file not exists")
+		return nil, fmt.Errorf("config file does not exist at %s, run 'commit llm setup' to create it", configPath)
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -187,7 +187,7 @@ func ListSavedModels() (*Config, error) {
 			return nil, fmt.Errorf("config file format error: %w. Please delete the config and run setup again", err)
 		}
 	} else {
-		return nil, errors.New("config file is empty, Please add at least one LLM Key")
+		return nil, errors.New("config file is empty, run 'commit llm setup' to add your first LLM provider")
 	}
 
 	return &cfg, nil
@@ -206,7 +206,7 @@ func ChangeDefault(Model types.LLMProvider) error {
 
 	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		return errors.New("config file not exists")
+		return fmt.Errorf("config file does not exist at %s, run 'commit llm setup' to create it", configPath)
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -256,7 +256,7 @@ func (s *StoreMethods) DeleteModel(Model types.LLMProvider) error {
 
 	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		return errors.New("config file not exists")
+		return fmt.Errorf("config file does not exist at %s, run 'commit llm setup' to create it", configPath)
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -318,7 +318,7 @@ func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) erro
 
 	isConfigExists := StoreUtils.CheckConfig(configPath)
 	if !isConfigExists {
-		return errors.New("config file not exists")
+		return fmt.Errorf("config file does not exist at %s, run 'commit llm setup' to create it", configPath)
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -342,7 +342,7 @@ func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) erro
 				Data: []byte(APIKey),
 			})
 			if err != nil {
-				return errors.New("error storing credentials")
+				return fmt.Errorf("failed to update credentials in keyring: %w", err)
 			}
 			updated = true
 		}
