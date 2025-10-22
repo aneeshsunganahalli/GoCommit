@@ -110,13 +110,7 @@ func (s *StoreMethods) Save(LLMConfig LLMProvider) error {
 		return err
 	}
 
-	err = os.WriteFile(configPath, data, 0600)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("LLM provider %s saved successfully\n", LLMConfig.LLM.String())
-	return nil
+	return os.WriteFile(configPath, data, 0600)
 }
 
 // DefaultLLMKey returns the currently selected default LLM provider, if any.
@@ -246,13 +240,7 @@ func ChangeDefault(Model types.LLMProvider) error {
 		return err
 	}
 
-	err = os.WriteFile(configPath, data, 0600)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("%s set as default\n", Model.String())
-	return nil
+	return os.WriteFile(configPath, data, 0600)
 }
 
 // DeleteModel removes the specified provider from the saved configuration.
@@ -292,12 +280,7 @@ func (s *StoreMethods) DeleteModel(Model types.LLMProvider) error {
 			if err != nil {
 				return err
 			}
-			err = os.WriteFile(configPath, []byte("{}"), 0600)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%s model deleted\n", Model.String())
-			return nil
+			return os.WriteFile(configPath, []byte("{}"), 0600)
 		}
 	} else {
 
@@ -318,12 +301,7 @@ func (s *StoreMethods) DeleteModel(Model types.LLMProvider) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(configPath, data, 0600)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s model deleted\n", Model.String())
-		return nil
+		return os.WriteFile(configPath, data, 0600)
 
 	}
 }
@@ -379,12 +357,6 @@ func (s *StoreMethods) UpdateAPIKey(Model types.LLMProvider, APIKey string) erro
 		return err
 	}
 
-	err = os.WriteFile(configPath, data, 0600)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("API key for %s updated successfully\n", Model.String())
-	return nil
+	return os.WriteFile(configPath, data, 0600)
 
 }
