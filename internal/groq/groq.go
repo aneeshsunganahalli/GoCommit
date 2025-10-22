@@ -36,6 +36,14 @@ type chatResponse struct {
 // If Groq updates their defaults again, override via GROQ_MODEL.
 const defaultModel = "llama-3.3-70b-versatile"
 
+const (
+	groqTemperature         = 0.2
+	groqMaxTokens           = 200
+	groqSystemMessage       = "You are an assistant that writes clear, concise git commit messages."
+	groqContentType         = "application/json"
+	groqAuthorizationPrefix = "Bearer "
+)
+
 var (
 	// allow overrides in tests
 	baseURL = "https://api.groq.com/openai/v1/chat/completions"
@@ -62,10 +70,10 @@ func GenerateCommitMessage(_ *types.Config, changes string, apiKey string, opts 
 
 	payload := chatRequest{
 		Model:       model,
-		Temperature: 0.2,
-		MaxTokens:   200,
+		Temperature: groqTemperature,
+		MaxTokens:   groqMaxTokens,
 		Messages: []chatMessage{
-			{Role: "system", Content: "You are an assistant that writes clear, concise git commit messages."},
+			{Role: "system", Content: groqSystemMessage},
 			{Role: "user", Content: prompt},
 		},
 	}
@@ -85,8 +93,8 @@ func GenerateCommitMessage(_ *types.Config, changes string, apiKey string, opts 
 		return "", fmt.Errorf("failed to create Groq request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", groqContentType)
+	req.Header.Set("Authorization", fmt.Sprintf("%s%s", groqAuthorizationPrefix, apiKey))
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

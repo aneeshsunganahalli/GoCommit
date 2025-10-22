@@ -11,6 +11,12 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+const (
+	ollamaDefaultModel = "llama3:latest"
+	ollamaStream       = false
+	ollamaContentType  = "application/json"
+)
+
 // OllamaRequest captures the prompt payload sent to an Ollama HTTP endpoint.
 type OllamaRequest struct {
 	Model  string `json:"model"`
@@ -28,7 +34,7 @@ type OllamaResponse struct {
 func GenerateCommitMessage(_ *types.Config, changes string, url string, model string, opts *types.GenerationOptions) (string, error) {
 	// Use llama3:latest as the default model
 	if model == "" {
-		model = "llama3:latest"
+		model = ollamaDefaultModel
 	}
 
 	// Preparing the prompt
@@ -38,7 +44,7 @@ func GenerateCommitMessage(_ *types.Config, changes string, url string, model st
 	reqBody := map[string]interface{}{
 		"model":  model,
 		"prompt": prompt,
-		"stream": false,
+		"stream": ollamaStream,
 	}
 
 	// Generating the body
@@ -51,7 +57,7 @@ func GenerateCommitMessage(_ *types.Config, changes string, url string, model st
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", ollamaContentType)
 
 	resp, err := httpClient.GetOllamaClient().Do(req)
 	if err != nil {

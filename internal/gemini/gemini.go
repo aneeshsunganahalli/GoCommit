@@ -10,6 +10,11 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+const (
+	geminiModel       = "gemini-2.0-flash"
+	geminiTemperature = 0.2
+)
+
 // GenerateCommitMessage asks Google Gemini to author a commit message for the
 // supplied repository changes and optional style instructions.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
@@ -25,8 +30,8 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	defer client.Close()
 
 	// Create a GenerativeModel with appropriate settings
-	model := client.GenerativeModel("gemini-2.0-flash")
-	model.SetTemperature(0.2) // Lower temperature for more focused responses
+	model := client.GenerativeModel(geminiModel)
+	model.SetTemperature(geminiTemperature) // Lower temperature for more focused responses
 
 	// Generate content using the prompt
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
