@@ -40,15 +40,10 @@ func NewStoreMethods() (*StoreMethods, error) {
 	}, nil
 }
 
-// Initializes Keyring instance
+// KeyringInit initializes a StoreMethods instance with both keyring and cache support.
+// This function is kept for backward compatibility with main.go.
 func KeyringInit() (*StoreMethods, error) {
-	ring, err := keyring.Open(keyring.Config{
-		ServiceName: "commit-msg",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to open keyring: %w", err)
-	}
-	return &StoreMethods{ring: ring}, nil
+	return NewStoreMethods()
 }
 
 // LLMProvider represents a single stored LLM provider and its credential.

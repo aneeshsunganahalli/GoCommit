@@ -35,6 +35,7 @@ Looking to contribute? Check out:
 🎛️ **Interactive Review Flow** - Accept, regenerate with new styles, or open the message in your editor before committing  
 📊 **File Statistics Display** - Visual preview of changed files and line counts  
 💡 **Smart Security Scrubbing** - Automatically removes API keys, passwords, and sensitive data from diffs  
+💾 **Intelligent Caching** - Reduces API costs by caching generated messages for similar changes  
 🚀 **Easy to Use** - Simple CLI interface with beautiful terminal UI  
 ⚡️ **Fast** - Quick generation of commit messages
 
@@ -52,6 +53,36 @@ You can use **Google Gemini**, **Grok**, **Claude**, **ChatGPT**, or **Ollama** 
 - **Environment Variables** - Automatic detection and redaction of sensitive `.env` files
 
 All scrubbing happens locally before any data leaves your machine, ensuring your secrets stay secure.
+
+## 💾 Intelligent Caching
+
+`commit-msg` includes a smart caching system that reduces API costs and improves performance:
+
+- **Automatic Cache Management** - Similar code changes generate the same commit message without API calls
+- **Cost Savings** - Avoid redundant API requests for identical or similar changes
+- **Performance Boost** - Instant retrieval of cached messages for repeated patterns
+- **Cache Statistics** - Track hit rates, total savings, and cache performance
+- **Secure Storage** - Cache files are stored with restricted permissions (600) for security
+- **Automatic Cleanup** - Old cache entries are automatically removed based on age and usage
+
+### Cache Management Commands
+
+```bash
+# View cache statistics
+commit cache stats
+
+# Clear all cached messages
+commit cache clear
+
+# Remove old cached messages
+commit cache cleanup
+```
+
+The cache intelligently identifies similar changes by analyzing:
+- File modifications and additions
+- Code structure and patterns
+- Commit context and style preferences
+- LLM provider and generation options
 
 ---
 
@@ -221,6 +252,8 @@ This makes it easy to tweak the tone, iterate on suggestions, or fine-tune the f
 - ✅ Create conventional commit messages
 - 📋 Auto-copy to clipboard for immediate use
 - 🎨 Beautiful terminal UI with file statistics and previews
+- 💾 Reduce API costs with intelligent caching for similar changes
+- ⚡️ Get instant results for repeated code patterns
 
 ---
 
@@ -254,6 +287,19 @@ Select: Change API Key
 
 ```bash
 Select: Delete
+```
+
+### Cache Management
+
+```bash
+# View cache statistics and performance
+commit cache stats
+
+# Clear all cached messages
+commit cache clear
+
+# Remove old cached messages (based on age and usage)
+commit cache cleanup
 ```
 
 ---

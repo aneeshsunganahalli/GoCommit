@@ -59,27 +59,35 @@ func NewCacheManager() (*CacheManager, error) {
 
 // Get retrieves a cached commit message if it exists.
 func (cm *CacheManager) Get(provider types.LLMProvider, diff string, opts *types.GenerationOptions) (*types.CacheEntry, bool) {
-	cm.mutex.RLock()
-	defer cm.mutex.RUnlock()
-
 	key := cm.hasher.GenerateCacheKey(provider, diff, opts)
-	entry, exists := cm.entries[key]
 
+	// Phase 1: Read with RLock to check existence and copy the entry
+	cm.mutex.RLock()
+	entry, exists := cm.entries[key]
 	if !exists {
+		cm.mutex.RUnlock()
+		// Update miss statistics with write lock
+		cm.mutex.Lock()
 		cm.stats.TotalMisses++
 		cm.updateHitRate()
+		cm.mutex.Unlock()
 		return nil, false
 	}
 
-	// Update access statistics
+	// Create a copy of the entry to avoid external mutation
+	entryCopy := *entry
+	cm.mutex.RUnlock()
+
+	// Phase 2: Update shared stats and entry with write lock
+	cm.mutex.Lock()
+	// Update access statistics on the original entry
 	entry.LastAccessedAt = time.Now().Format(time.RFC3339)
 	entry.AccessCount++
 	cm.stats.TotalHits++
-
-	// Update hit rate
 	cm.updateHitRate()
+	cm.mutex.Unlock()
 
-	return entry, true
+	return &entryCopy, true
 }
 
 // Set stores a commit message in the cache.
@@ -133,10 +141,10 @@ func (cm *CacheManager) Clear() error {
 
 // GetStats returns cache statistics.
 func (cm *CacheManager) GetStats() *types.CacheStats {
-	cm.mutex.RLock()
-	defer cm.mutex.RUnlock()
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
 
-	// Calculate additional stats
+	// Calculate additional stats (mutates cm.stats)
 	cm.calculateStats()
 
 	// Return a copy to avoid race conditions
@@ -149,7 +157,17 @@ func (cm *CacheManager) Cleanup() error {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 
-	return cm.cleanupOldEntries()
+	// Clean up old entries in memory
+	if err := cm.cleanupOldEntries(); err != nil {
+		return fmt.Errorf("failed to cleanup old entries: %w", err)
+	}
+
+	// Persist the cleaned cache to disk
+	if err := cm.saveCache(); err != nil {
+		return fmt.Errorf("failed to persist cache after cleanup: %w", err)
+	}
+
+	return nil
 }
 
 // loadCache loads the cache from disk.
@@ -176,6 +194,13 @@ func (cm *CacheManager) loadCache() error {
 	if cacheData.Stats != nil {
 		cm.stats = cacheData.Stats
 	}
+	if cm.entries == nil {
+		cm.entries = make(map[string]*types.CacheEntry)
+	}
+	if cm.stats == nil {
+		cm.stats = &types.CacheStats{}
+	}
+	cm.stats.TotalEntries = len(cm.entries)
 
 	return nil
 }
@@ -183,7 +208,7 @@ func (cm *CacheManager) loadCache() error {
 // saveCache saves the cache to disk.
 func (cm *CacheManager) saveCache() error {
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(cm.filePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(cm.filePath), 0700); err != nil {
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
@@ -202,7 +227,7 @@ func (cm *CacheManager) saveCache() error {
 		return fmt.Errorf("failed to marshal cache data: %w", err)
 	}
 
-	if err := os.WriteFile(cm.filePath, data, 0644); err != nil {
+	if err := os.WriteFile(cm.filePath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write cache file: %w", err)
 	}
 
@@ -233,7 +258,7 @@ func (cm *CacheManager) cleanupOldEntries() error {
 
 	// If we still have too many entries, remove least recently accessed
 	if len(cm.entries)-len(keysToDelete) > cm.config.MaxEntries {
-		cm.removeLeastAccessed(keysToDelete)
+		keysToDelete = cm.removeLeastAccessed(keysToDelete)
 	}
 
 	// Delete the selected entries
@@ -247,7 +272,7 @@ func (cm *CacheManager) cleanupOldEntries() error {
 }
 
 // removeLeastAccessed removes the least recently accessed entries.
-func (cm *CacheManager) removeLeastAccessed(existingKeysToDelete []string) {
+func (cm *CacheManager) removeLeastAccessed(existingKeysToDelete []string) []string {
 	type entryWithKey struct {
 		key   string
 		entry *types.CacheEntry
@@ -282,6 +307,8 @@ func (cm *CacheManager) removeLeastAccessed(existingKeysToDelete []string) {
 	for i := 0; i < entriesToRemove && i < len(entries); i++ {
 		existingKeysToDelete = append(existingKeysToDelete, entries[i].key)
 	}
+
+	return existingKeysToDelete
 }
 
 // updateHitRate calculates and updates the hit rate.

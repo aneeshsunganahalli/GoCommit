@@ -73,12 +73,6 @@ func (h *DiffHasher) shouldSkipLine(line string) bool {
 		return true
 	}
 
-	// Skip lines with file paths (but keep the actual changes)
-	if strings.Contains(line, "/") && (strings.HasPrefix(line, "+") || strings.HasPrefix(line, "-")) {
-		// This is a file path line, skip it
-		return true
-	}
-
 	return false
 }
 
