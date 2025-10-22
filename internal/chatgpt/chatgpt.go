@@ -10,6 +10,10 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+const (
+	chatgptModel = openai.ChatModelGPT4o
+)
+
 // GenerateCommitMessage calls OpenAI's chat completions API to turn the provided
 // repository changes into a polished git commit message.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
@@ -22,7 +26,7 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(prompt),
 		},
-		Model: openai.ChatModelGPT4o,
+		Model: chatgptModel,
 	})
 	if err != nil {
 		return "", fmt.Errorf("OpenAI error: %w", err)

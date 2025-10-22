@@ -11,6 +11,16 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+const (
+	claudeModel        = "claude-3-5-sonnet-20241022"
+	claudeMaxTokens    = 200
+	claudeAPIEndpoint  = "https://api.anthropic.com/v1/messages"
+	claudeAPIVersion   = "2023-06-01"
+	contentTypeJSON    = "application/json"
+	anthropicVersionHeader = "anthropic-version"
+	xAPIKeyHeader      = "x-api-key"
+)
+
 // ClaudeRequest describes the payload sent to Anthropic's Claude messages API.
 type ClaudeRequest struct {
 	Model     string          `json:"model"`
@@ -34,8 +44,8 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	prompt := types.BuildCommitPrompt(changes, opts)
 
 	reqBody := ClaudeRequest{
-		Model:     "claude-3-5-sonnet-20241022",
-		MaxTokens: 200,
+		Model:     claudeModel,
+		MaxTokens: claudeMaxTokens,
 		Messages: []types.Message{
 			{
 				Role:    "user",
@@ -50,14 +60,14 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	}
 
 	ctx := context.Background()
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, "POST", claudeAPIEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
+	req.Header.Set("Content-Type", contentTypeJSON)
+	req.Header.Set(xAPIKeyHeader, apiKey)
+	req.Header.Set(anthropicVersionHeader, claudeAPIVersion)
 
 	client := httpClient.GetClient()
 	resp, err := client.Do(req)

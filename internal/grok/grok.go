@@ -11,6 +11,14 @@ import (
 	"github.com/dfanso/commit-msg/pkg/types"
 )
 
+const (
+	grokModel          = "grok-3-mini-fast-beta"
+	grokTemperature    = 0
+	grokAPIEndpoint    = "https://api.x.ai/v1/chat/completions"
+	grokContentType    = "application/json"
+	authorizationPrefix = "Bearer "
+)
+
 // GenerateCommitMessage calls X.AI's Grok API to create a commit message from
 // the provided Git diff and generation options.
 func GenerateCommitMessage(config *types.Config, changes string, apiKey string, opts *types.GenerationOptions) (string, error) {
@@ -25,9 +33,9 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 				Content: prompt,
 			},
 		},
-		Model:       "grok-3-mini-fast-beta",
+		Model:       grokModel,
 		Stream:      false,
-		Temperature: 0,
+		Temperature: grokTemperature,
 	}
 
 	requestBody, err := json.Marshal(request)
@@ -36,14 +44,14 @@ func GenerateCommitMessage(config *types.Config, changes string, apiKey string, 
 	}
 
 	// Create HTTP request
-	req, err := http.NewRequest("POST", "https://api.x.ai/v1/chat/completions", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", grokAPIEndpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return "", err
 	}
 
 	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Content-Type", grokContentType)
+	req.Header.Set("Authorization", fmt.Sprintf("%s%s", authorizationPrefix, apiKey))
 
 	client := httpClient.GetClient()
 	resp, err := client.Do(req)
